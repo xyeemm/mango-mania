@@ -1,8 +1,8 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
+import { LayoutDashboard, ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useCartContext } from "@/context/cart-context";
 
 type StoreHeaderProps = {
@@ -27,7 +27,15 @@ export function StoreHeader({ onCartOpen }: StoreHeaderProps) {
           </div>
         </Link>
 
-        
+        <nav className="ml-auto hidden items-center gap-1 sm:flex">
+          <Link
+            href="/admin"
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
+            <LayoutDashboard />
+            Admin
+          </Link>
+        </nav>
 
         <Button
           variant="outline"
