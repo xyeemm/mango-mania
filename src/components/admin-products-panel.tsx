@@ -49,6 +49,13 @@ type ProductForm = {
 };
 
 type CloudinaryUploadResponse = {
+  error?: string | { message?: string };
+  secure_url?: string;
+  url?: string;
+};
+
+type CloudinarySignedUploadResponse = {
+  error?: string | { message?: string };
   secure_url?: string;
   url?: string;
 };
@@ -156,6 +163,98 @@ function TextArea({
   );
 }
 
+function getCloudinaryErrorMessage(
+  error: CloudinaryUploadResponse["error"],
+  fallback: string
+) {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  return error?.message ?? fallback;
+}
+
+async function uploadWithSignedRoute(file: File) {
+  const uploadData = new FormData();
+  uploadData.append("file", file);
+
+  const response = await fetch("/api/cloudinary/upload", {
+    method: "POST",
+    body: uploadData,
+  });
+
+  const result = (await response.json()) as CloudinarySignedUploadResponse;
+
+  if (!response.ok || !result.url) {
+    throw new Error(
+      getCloudinaryErrorMessage(result.error, "Signed Cloudinary upload failed.")
+    );
+  }
+
+  return result.url;
+}
+
+async function uploadWithUnsignedPreset(file: File) {
+  if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
+    throw new Error(
+      "Cloudinary is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to .env.local."
+    );
+  }
+
+  const uploadData = new FormData();
+  uploadData.append("file", file);
+  uploadData.append("upload_preset", cloudinaryUploadPreset);
+
+  if (cloudinaryFolder) {
+    uploadData.append("folder", cloudinaryFolder);
+  }
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
+    {
+      method: "POST",
+      body: uploadData,
+    }
+  );
+
+  const result = (await response.json()) as CloudinaryUploadResponse;
+  const uploadedUrl = result.secure_url ?? result.url;
+
+  if (!response.ok || !uploadedUrl) {
+    throw new Error(
+      getCloudinaryErrorMessage(
+        result.error,
+        "Cloudinary upload failed. Check the upload preset."
+      )
+    );
+  }
+
+  return uploadedUrl;
+}
+
+async function uploadImageFile(file: File) {
+  if (!cloudinaryUploadPreset) {
+    return uploadWithSignedRoute(file);
+  }
+
+  try {
+    return await uploadWithSignedRoute(file);
+  } catch (error) {
+    try {
+      return await uploadWithUnsignedPreset(file);
+    } catch (fallbackError) {
+      const signedMessage =
+        error instanceof Error ? error.message : "Signed upload failed.";
+      const unsignedMessage =
+        fallbackError instanceof Error
+          ? fallbackError.message
+          : "Unsigned upload failed.";
+
+      throw new Error(`${signedMessage} Unsigned fallback: ${unsignedMessage}`);
+    }
+  }
+}
+
 export function AdminProductsPanel() {
   const [products, setProducts] = useState<MangoProduct[]>(readManagedProducts);
   const [selectedId, setSelectedId] = useState<string>("new");
@@ -232,13 +331,6 @@ export function AdminProductsPanel() {
       return;
     }
 
-    if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
-      setNotice(
-        "Cloudinary is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to .env.local."
-      );
-      return;
-    }
-
     setIsUploading(true);
     setNotice(`Uploading ${files.length} image${files.length === 1 ? "" : "s"}...`);
 
@@ -250,34 +342,7 @@ export function AdminProductsPanel() {
           throw new Error(`${file.name} is not an image file.`);
         }
 
-        const uploadData = new FormData();
-        uploadData.append("file", file);
-        uploadData.append("upload_preset", cloudinaryUploadPreset);
-
-        if (cloudinaryFolder) {
-          uploadData.append("folder", cloudinaryFolder);
-        }
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
-          {
-            method: "POST",
-            body: uploadData,
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Cloudinary upload failed for ${file.name}.`);
-        }
-
-        const result = (await response.json()) as CloudinaryUploadResponse;
-        const uploadedUrl = result.secure_url ?? result.url;
-
-        if (!uploadedUrl) {
-          throw new Error(`Cloudinary did not return a URL for ${file.name}.`);
-        }
-
-        uploadedUrls.push(uploadedUrl);
+        uploadedUrls.push(await uploadImageFile(file));
       }
 
       appendImageUrls(uploadedUrls);
