@@ -2,10 +2,10 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ProductImage } from "@/components/product-image";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -203,12 +203,10 @@ export function CartSheet({ open, onOpenChange, cart }: CartSheetProps) {
                         href={`/products/${item.product.id}`}
                         className="relative size-14 shrink-0 overflow-hidden rounded-md bg-muted"
                       >
-                        <Image
+                        <ProductImage
                           src={item.product.images[0]}
                           alt={item.product.imageAlt}
-                          fill
-                          sizes="56px"
-                          className="object-cover"
+                          emoji={item.product.emoji}
                         />
                       </Link>
                       <div className="min-w-0 flex-1">

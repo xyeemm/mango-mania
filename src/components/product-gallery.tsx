@@ -1,17 +1,19 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { useState } from "react";
+import { ProductImage } from "@/components/product-image";
 import { cn } from "@/lib/utils";
 
 type ProductGalleryProps = {
   images: string[];
   alt: string;
+  emoji?: string;
 };
 
-export function ProductGallery({ images, alt }: ProductGalleryProps) {
+export function ProductGallery({ images, alt, emoji }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const galleryImages = images.length > 0 ? images : [undefined];
 
   return (
     <div className="space-y-3">
@@ -22,18 +24,16 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
         transition={{ duration: 0.3 }}
         className="relative aspect-square overflow-hidden rounded-xl border bg-muted"
       >
-        <Image
-          src={images[activeIndex]}
+        <ProductImage
+          src={galleryImages[activeIndex]}
           alt={`${alt} — image ${activeIndex + 1}`}
-          fill
+          emoji={emoji}
           priority
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          className="object-cover"
         />
       </motion.div>
 
       <div className="grid grid-cols-4 gap-2">
-        {images.map((src, index) => (
+        {galleryImages.map((src, index) => (
           <button
             key={`${src}-${index}`}
             type="button"
@@ -45,12 +45,10 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
                 : "border-transparent opacity-60 hover:opacity-100"
             )}
           >
-            <Image
+            <ProductImage
               src={src}
               alt={`${alt} thumbnail ${index + 1}`}
-              fill
-              sizes="120px"
-              className="object-cover"
+              emoji={emoji}
             />
           </button>
         ))}

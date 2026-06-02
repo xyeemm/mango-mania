@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ProductImage } from "@/components/product-image";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -63,12 +63,11 @@ export function MangoCard({ product, index, compact = false }: MangoCardProps) {
       <Card className="flex h-full flex-col overflow-hidden pt-0 shadow-sm transition-shadow duration-300 hover:shadow-lg">
         <Link href={href} className="group block">
           <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-            <Image
+            <ProductImage
               src={product.images[0]}
               alt={product.imageAlt}
-              fill
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              emoji={product.emoji}
+              className="transition-transform duration-500 group-hover:scale-[1.03]"
             />
             {product.tag && (
               <Badge className="absolute top-3 right-3 bg-brand text-white hover:bg-brand/90">

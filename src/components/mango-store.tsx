@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { MangoCard } from "@/components/mango-card";
 import { StoreHero } from "@/components/store-hero";
-import { MANGO_PRODUCTS } from "@/lib/mangos";
+import { useManagedProducts } from "@/hooks/use-managed-products";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -23,6 +23,8 @@ const headerVariants = {
 };
 
 export function MangoStore() {
+  const products = useManagedProducts();
+
   return (
     <>
       <StoreHero />
@@ -64,7 +66,7 @@ export function MangoStore() {
           viewport={{ once: true, margin: "-40px" }}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {MANGO_PRODUCTS.map((product, index) => (
+          {products.map((product, index) => (
             <MangoCard key={product.id} product={product} index={index} />
           ))}
         </motion.div>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { ProductDetailPage } from "@/components/product-detail-page";
 import { getProductById, MANGO_PRODUCTS } from "@/lib/mangos";
 
@@ -29,9 +28,5 @@ export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
   const product = getProductById(id);
 
-  if (!product) {
-    notFound();
-  }
-
-  return <ProductDetailPage product={product} />;
+  return <ProductDetailPage initialProduct={product} productId={id} />;
 }

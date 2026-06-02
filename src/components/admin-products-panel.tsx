@@ -7,10 +7,12 @@ import {
   Save,
   Search,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import type {
+  ChangeEvent,
   FormEvent,
   ReactNode,
   TextareaHTMLAttributes,
@@ -20,6 +22,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MANGO_PRODUCTS, MangoProduct, formatPrice } from "@/lib/mangos";
+import {
+  readManagedProducts,
+  saveManagedProducts,
+} from "@/lib/managed-products";
 import { cn } from "@/lib/utils";
 
 type ProductForm = {
@@ -42,7 +48,15 @@ type ProductForm = {
   delivery: string;
 };
 
-const STORAGE_KEY = "mango-mania-admin-products";
+type CloudinaryUploadResponse = {
+  secure_url?: string;
+  url?: string;
+};
+
+const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const cloudinaryUploadPreset =
+  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+const cloudinaryFolder = process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER;
 
 const emptyForm: ProductForm = {
   id: "",
@@ -143,32 +157,15 @@ function TextArea({
 }
 
 export function AdminProductsPanel() {
-  const [products, setProducts] = useState<MangoProduct[]>(() => {
-    if (typeof window === "undefined") {
-      return MANGO_PRODUCTS;
-    }
-
-    const savedProducts = window.localStorage.getItem(STORAGE_KEY);
-
-    if (!savedProducts) {
-      return MANGO_PRODUCTS;
-    }
-
-    try {
-      const parsedProducts = JSON.parse(savedProducts) as MangoProduct[];
-
-      return Array.isArray(parsedProducts) ? parsedProducts : MANGO_PRODUCTS;
-    } catch {
-      return MANGO_PRODUCTS;
-    }
-  });
+  const [products, setProducts] = useState<MangoProduct[]>(readManagedProducts);
   const [selectedId, setSelectedId] = useState<string>("new");
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState("Ready to manage the catalog.");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    saveManagedProducts(products);
   }, [products]);
 
   const selectedProduct = products.find((product) => product.id === selectedId);
@@ -211,6 +208,93 @@ export function AdminProductsPanel() {
 
       return nextForm;
     });
+  }
+
+  function appendImageUrls(urls: string[]) {
+    setForm((currentForm) => {
+      const currentImages = currentForm.images
+        .split(/\r?\n/)
+        .map((image) => image.trim())
+        .filter(Boolean);
+
+      return {
+        ...currentForm,
+        images: [...currentImages, ...urls].join("\n"),
+      };
+    });
+  }
+
+  async function uploadProductImages(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+
+    if (files.length === 0) {
+      return;
+    }
+
+    if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
+      setNotice(
+        "Cloudinary is not configured. Add NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET to .env.local."
+      );
+      return;
+    }
+
+    setIsUploading(true);
+    setNotice(`Uploading ${files.length} image${files.length === 1 ? "" : "s"}...`);
+
+    try {
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+          throw new Error(`${file.name} is not an image file.`);
+        }
+
+        const uploadData = new FormData();
+        uploadData.append("file", file);
+        uploadData.append("upload_preset", cloudinaryUploadPreset);
+
+        if (cloudinaryFolder) {
+          uploadData.append("folder", cloudinaryFolder);
+        }
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
+          {
+            method: "POST",
+            body: uploadData,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Cloudinary upload failed for ${file.name}.`);
+        }
+
+        const result = (await response.json()) as CloudinaryUploadResponse;
+        const uploadedUrl = result.secure_url ?? result.url;
+
+        if (!uploadedUrl) {
+          throw new Error(`Cloudinary did not return a URL for ${file.name}.`);
+        }
+
+        uploadedUrls.push(uploadedUrl);
+      }
+
+      appendImageUrls(uploadedUrls);
+      setNotice(
+        `${uploadedUrls.length} image${
+          uploadedUrls.length === 1 ? "" : "s"
+        } uploaded. Save the product to publish changes.`
+      );
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Cloudinary upload failed. Check the upload preset and try again."
+      );
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   function startCreate() {
@@ -539,12 +623,41 @@ export function AdminProductsPanel() {
               </div>
 
               <Field label="Image URLs" htmlFor="images">
-                <TextArea
-                  id="images"
-                  value={form.images}
-                  onChange={(event) => updateField("images", event.target.value)}
-                  placeholder="One image URL per line"
-                />
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background p-3">
+                    <Input
+                      id="cloudinary-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={isUploading}
+                      onChange={uploadProductImages}
+                      className="max-w-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isUploading}
+                      onClick={() =>
+                        document.getElementById("cloudinary-upload")?.click()
+                      }
+                    >
+                      <Upload />
+                      {isUploading ? "Uploading" : "Upload"}
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Uploads to Cloudinary and appends URLs below.
+                    </span>
+                  </div>
+                  <TextArea
+                    id="images"
+                    value={form.images}
+                    onChange={(event) =>
+                      updateField("images", event.target.value)
+                    }
+                    placeholder="One image URL per line"
+                  />
+                </div>
               </Field>
             </div>
 

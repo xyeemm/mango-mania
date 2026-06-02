@@ -5,16 +5,14 @@ import { Minus, Plus, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProductGallery } from "@/components/product-gallery";
 import { RelatedProducts } from "@/components/related-products";
 import { useCartContext } from "@/context/cart-context";
-import {
-  formatPrice,
-  getRelatedProducts,
-  type MangoProduct,
-} from "@/lib/mangos";
+import { useManagedProducts } from "@/hooks/use-managed-products";
+import { formatPrice, type MangoProduct } from "@/lib/mangos";
+import { cn } from "@/lib/utils";
 
 const tagLabels = {
   bestseller: "Bestseller",
@@ -32,18 +30,49 @@ const detailLabels: Record<keyof MangoProduct["details"], string> = {
 };
 
 type ProductDetailPageProps = {
-  product: MangoProduct;
+  initialProduct?: MangoProduct;
+  productId: string;
 };
 
-export function ProductDetailPage({ product }: ProductDetailPageProps) {
+export function ProductDetailPage({
+  initialProduct,
+  productId,
+}: ProductDetailPageProps) {
+  const products = useManagedProducts();
+  const product =
+    products.find((item) => item.id === productId) ?? initialProduct;
   const cart = useCartContext();
-  const inCart = cart.items.find((i) => i.product.id === product.id);
+  const inCart = product
+    ? cart.items.find((i) => i.product.id === product.id)
+    : undefined;
   const quantity = inCart?.quantity ?? 0;
-  const related = getRelatedProducts(product);
+  const related = product
+    ? product.relatedIds
+        .map((id) => products.find((item) => item.id === id))
+        .filter((item): item is MangoProduct => item !== undefined)
+    : [];
 
   function handleAddToCart() {
+    if (!product) {
+      return;
+    }
+
     cart.addItem(product);
     toast.success(`${product.name} added to cart`);
+  }
+
+  if (!product) {
+    return (
+      <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+        <p className="font-heading text-2xl font-semibold">Product not found</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          This item may no longer be available.
+        </p>
+        <Link href="/" className={cn(buttonVariants({ size: "lg" }), "mt-8")}>
+          Return to shop
+        </Link>
+      </main>
+    );
   }
 
   return (
@@ -62,7 +91,11 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
         >
-          <ProductGallery images={product.images} alt={product.imageAlt} />
+          <ProductGallery
+            images={product.images}
+            alt={product.imageAlt}
+            emoji={product.emoji}
+          />
         </motion.div>
 
         <motion.div
