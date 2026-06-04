@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { MangoCard } from "@/components/mango-card";
 import { StoreHero } from "@/components/store-hero";
 import { useManagedProducts } from "@/hooks/use-managed-products";
+import {type MangoProduct} from "@/types/mango";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -23,7 +24,8 @@ const headerVariants = {
 };
 
 export function MangoStore() {
-  const { error, isLoading, products } = useManagedProducts();
+  // 1. Destructure 'products' directly from your custom data management hook
+  const { products, error, isLoading } = useManagedProducts();
 
   return (
     <>
@@ -71,14 +73,24 @@ export function MangoStore() {
               {error}
             </p>
           )}
+          
           {isLoading && (
             <p className="col-span-full text-sm text-muted-foreground">
               Loading products...
             </p>
           )}
-          {products.map((product, index) => (
+
+          {/* 2. Map over the state-managed array safely instead of the raw function */}
+          {!isLoading && !error && products?.map((product: MangoProduct, index: any) => (
             <MangoCard key={product.id} product={product} index={index} />
           ))}
+
+          {/* Fallback view if the cloud database collection is currently empty */}
+          {!isLoading && !error && products?.length === 0 && (
+            <p className="col-span-full text-sm text-muted-foreground italic text-center py-8">
+              No delicious mangos found in stock right now. Use the admin panel to add some!
+            </p>
+          )}
         </motion.div>
       </section>
     </>

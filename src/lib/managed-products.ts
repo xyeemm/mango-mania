@@ -1,4 +1,4 @@
-import { type MangoProduct } from "@/lib/mangos";
+import { type MangoProduct } from "@/lib/mongodb";
 
 export const MANAGED_PRODUCTS_EVENT = "mango-mania-products-updated";
 
@@ -10,13 +10,21 @@ function isApiError(value: unknown): value is ApiError {
   return !!value && typeof value === "object" && "error" in value;
 }
 
+/**
+ * Triggers a global window event to inform UI components to re-fetch their data
+ */
 export function notifyProductsChanged() {
-  window.dispatchEvent(new Event(MANAGED_PRODUCTS_EVENT));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(MANAGED_PRODUCTS_EVENT));
+  }
 }
 
+/**
+ * Fetches all products from the backend database
+ */
 export async function fetchProducts() {
   const response = await fetch("/api/products");
-  const products = (await response.json()) as MangoProduct[] | { error?: string };
+  const products = (await response.json()) as MangoProduct[] | ApiError;
 
   if (!response.ok || !Array.isArray(products)) {
     throw new Error(
@@ -29,13 +37,17 @@ export async function fetchProducts() {
   return products;
 }
 
+/**
+ * Pushes a new mango product submission to the database
+ */
 export async function createProduct(product: MangoProduct) {
   const response = await fetch("/api/products", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(product),
+  
+  body: JSON.stringify(product),
   });
-  const result = (await response.json()) as MangoProduct | { error?: string };
+  const result = (await response.json()) as MangoProduct | ApiError;
 
   if (!response.ok || isApiError(result)) {
     throw new Error(
@@ -47,13 +59,16 @@ export async function createProduct(product: MangoProduct) {
   return result;
 }
 
+/**
+ * Updates an entire existing product entry in the database by its ID
+ */
 export async function updateProduct(productId: string, product: MangoProduct) {
   const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(product),
   });
-  const result = (await response.json()) as MangoProduct | { error?: string };
+  const result = (await response.json()) as MangoProduct | ApiError;
 
   if (!response.ok || isApiError(result)) {
     throw new Error(
@@ -65,6 +80,9 @@ export async function updateProduct(productId: string, product: MangoProduct) {
   return result;
 }
 
+/**
+ * Removes a single mango product from the database by its ID
+ */
 export async function deleteProductById(productId: string) {
   const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
     method: "DELETE",
@@ -78,18 +96,17 @@ export async function deleteProductById(productId: string) {
   notifyProductsChanged();
 }
 
+/**
+ * Wipes the entire database collection clean via the Admin dashboard
+ */
 export async function resetProducts() {
   const response = await fetch("/api/products", {
     method: "DELETE",
   });
-  const result = (await response.json()) as MangoProduct[] | { error?: string };
+  const result = (await response.json()) as { message?: string; error?: string };
 
-  if (!response.ok || !Array.isArray(result)) {
-    throw new Error(
-      Array.isArray(result)
-        ? "Unable to reset products."
-        : result.error ?? "Unable to reset products."
-    );
+  if (!response.ok) {
+    throw new Error(result.error ?? "Unable to reset products.");
   }
 
   notifyProductsChanged();

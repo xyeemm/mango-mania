@@ -1,5 +1,20 @@
 import { MongoClient, type Collection } from "mongodb";
-import { MANGO_PRODUCTS, type MangoProduct } from "@/lib/mangos";
+
+// Define your product structure directly so you don't need the local file import
+export interface MangoProduct {
+  id: string;
+  name: string;
+  variety: string;
+  description: string;
+  longDescription: string;
+  price: number;
+  unit: string;
+  emoji: string;
+  images: string[];
+  imageAlt: string;
+  details: Record<string, string | number | boolean>;
+  relatedIds: string[];
+}
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB ?? "mango-mania";
@@ -27,26 +42,31 @@ export async function getProductsCollection(): Promise<Collection<MangoProduct>>
   return client.db(dbName).collection<MangoProduct>("products");
 }
 
-export async function ensureProductsSeeded() {
+/**
+ * Initializes the collection and ensures index performance
+ */
+export async function initProductsCollection() {
   const collection = await getProductsCollection();
-  const count = await collection.countDocuments();
-
-  if (count === 0) {
-    await collection.insertMany(MANGO_PRODUCTS);
-  }
-
+  
+  // Ensures that no two products can have the same custom id string
   await collection.createIndex({ id: 1 }, { unique: true });
 
   return collection;
 }
 
-export function serializeProduct(product: MangoProduct & { _id?: unknown }) {
+/**
+ * Strips out MongoDB's internal BSON _id so it doesn't crash Next.js Client Components
+ */
+export function serializeProduct(product: MangoProduct & { _id?: unknown }): MangoProduct {
   const { _id, ...serializedProduct } = product;
-  void _id;
-  return serializedProduct;
+  void _id; 
+  return serializedProduct as MangoProduct;
 }
 
-export function validateProduct(product: MangoProduct) {
+/**
+ * Acts as your database schema validation guard before saving payloads
+ */
+export function validateProduct(product: MangoProduct): boolean {
   return (
     typeof product.id === "string" &&
     typeof product.name === "string" &&
