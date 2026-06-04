@@ -225,7 +225,7 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 										opacity: 1,
 										y: 0,
 										rotate: 0,
-										transition: {
+										transition: { 
 											duration: 0.7,
 											delay: 0.35 + i * 0.12,
 											ease: [0.22, 1, 0.36, 1],
