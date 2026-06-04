@@ -5,7 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useManagedProducts } from '@/hooks/use-managed-products'
 import { useOrders } from '@/hooks/use-orders'
-import { saveManagedProducts } from '@/lib/managed-products'
+import {
+	createProduct,
+	deleteProductById,
+	resetProducts,
+	updateProduct,
+} from '@/lib/managed-products'
 import { MANGO_PRODUCTS, MangoProduct, formatPrice } from '@/lib/mangos'
 import type { StoreOrder } from '@/lib/orders'
 import { cn } from '@/lib/utils'
@@ -63,6 +68,7 @@ type CloudinarySignedUploadResponse = {
 const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 const cloudinaryUploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
 const cloudinaryFolder = process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER
+const EMPTY_ORDERS: StoreOrder[] = []
 
 const emptyForm: ProductForm = {
 	id: '',
@@ -273,7 +279,11 @@ async function uploadImageFile(file: File) {
 }
 
 export function AdminProductsPanel() {
-	const managedProducts = useManagedProducts()
+	const {
+		error: productsError,
+		isLoading: productsLoading,
+		products: managedProducts,
+	} = useManagedProducts()
 	const managedOrders = useOrders()
 	const isMounted = useSyncExternalStore(
 		subscribeToClientReady,
@@ -286,7 +296,10 @@ export function AdminProductsPanel() {
 	const [notice, setNotice] = useState('Ready to manage the catalog.')
 	const [isUploading, setIsUploading] = useState(false)
 	const products = isMounted ? managedProducts : MANGO_PRODUCTS
-	const orders = isMounted ? managedOrders : []
+	const orders = useMemo(
+		() => (isMounted ? managedOrders : EMPTY_ORDERS),
+		[isMounted, managedOrders],
+	)
 
 	const selectedProduct = products.find((product) => product.id === selectedId)
 
@@ -330,18 +343,6 @@ export function AdminProductsPanel() {
 
 			return nextForm
 		})
-	}
-
-	function updateProducts(
-		nextProducts:
-			| MangoProduct[]
-			| ((currentProducts: MangoProduct[]) => MangoProduct[]),
-	) {
-		saveManagedProducts(
-			typeof nextProducts === 'function'
-				? nextProducts(products)
-				: nextProducts,
-		)
 	}
 
 	function appendImageUrls(urls: string[]) {
@@ -411,7 +412,7 @@ export function AdminProductsPanel() {
 		setNotice(`Editing ${product.name}.`)
 	}
 
-	function deleteProduct(productId: string) {
+	async function deleteProduct(productId: string) {
 		const product = products.find((item) => item.id === productId)
 
 		if (!product) {
@@ -424,16 +425,14 @@ export function AdminProductsPanel() {
 			return
 		}
 
-		updateProducts((currentProducts) =>
-			currentProducts
-				.filter((item) => item.id !== productId)
-				.map((item) => ({
-					...item,
-					relatedIds: item.relatedIds.filter(
-						(relatedId) => relatedId !== productId,
-					),
-				})),
-		)
+		try {
+			await deleteProductById(productId)
+		} catch (error) {
+			setNotice(
+				error instanceof Error ? error.message : 'Unable to delete product.',
+			)
+			return
+		}
 
 		if (selectedId === productId) {
 			startCreate()
@@ -442,9 +441,26 @@ export function AdminProductsPanel() {
 		setNotice(`${product.name} was deleted.`)
 	}
 
-	function resetCatalog() {}
+	async function resetCatalog() {
+		const confirmed = window.confirm('Reset products to the original catalog?')
 
-	function submitProduct(event: FormEvent<HTMLFormElement>) {
+		if (!confirmed) {
+			return
+		}
+
+		try {
+			await resetProducts()
+			setSelectedId('new')
+			setForm(emptyForm)
+			setNotice('Catalog reset to the original products.')
+		} catch (error) {
+			setNotice(
+				error instanceof Error ? error.message : 'Unable to reset products.',
+			)
+		}
+	}
+
+	async function submitProduct(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
 
 		const productId = form.id.trim()
@@ -472,22 +488,16 @@ export function AdminProductsPanel() {
 
 		const savedProduct = formToProduct(form, existingProduct)
 
-		updateProducts((currentProducts) => {
+		try {
 			if (selectedId === 'new') {
-				return [savedProduct, ...currentProducts]
+				await createProduct(savedProduct)
+			} else {
+				await updateProduct(selectedId, savedProduct)
 			}
-
-			return currentProducts.map((product) =>
-				product.id === selectedId
-					? savedProduct
-					: {
-							...product,
-							relatedIds: product.relatedIds.map((relatedId) =>
-								relatedId === selectedId ? savedProduct.id : relatedId,
-							),
-						},
-			)
-		})
+		} catch (error) {
+			setNotice(error instanceof Error ? error.message : 'Unable to save product.')
+			return
+		}
 
 		setSelectedId(savedProduct.id)
 		setNotice(`${savedProduct.name} was saved.`)
@@ -513,9 +523,9 @@ export function AdminProductsPanel() {
 						<Link href='/' className={buttonVariants({ variant: 'outline' })}>
 							Storefront
 						</Link>
-						<Button
-							type='button'
-							variant='outline'
+							<Button
+								type='button'
+								variant='outline'
 							onClick={() =>
 								document
 									.getElementById('orders-section')
@@ -523,9 +533,12 @@ export function AdminProductsPanel() {
 							}
 						>
 							<ListOrdered className='size-4' />
-							Orders
-						</Button>
-						<Button type='button' onClick={startCreate}>
+								Orders
+							</Button>
+							<Button type='button' variant='outline' onClick={resetCatalog}>
+								Reset
+							</Button>
+							<Button type='button' onClick={startCreate}>
 							<Plus />
 							New product
 						</Button>
@@ -605,14 +618,17 @@ export function AdminProductsPanel() {
 
 				<form onSubmit={submitProduct} className='rounded-lg border bg-card'>
 					<div className='flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between'>
-						<div>
-							<p className='text-sm font-medium'>
-								{selectedProduct
-									? `Editing ${selectedProduct.name}`
-									: 'Create product'}
-							</p>
-							<p className='mt-1 text-sm text-muted-foreground'>{notice}</p>
-						</div>
+							<div>
+								<p className='text-sm font-medium'>
+									{selectedProduct
+										? `Editing ${selectedProduct.name}`
+										: 'Create product'}
+								</p>
+								<p className='mt-1 text-sm text-muted-foreground'>
+									{productsError ??
+										(productsLoading ? 'Loading products from MongoDB...' : notice)}
+								</p>
+							</div>
 
 						<div className='flex flex-wrap gap-2'>
 							<Button type='button' variant='outline' onClick={startCreate}>

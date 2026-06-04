@@ -23,7 +23,7 @@ const headerVariants = {
 };
 
 export function MangoStore() {
-  const products = useManagedProducts();
+  const { error, isLoading, products } = useManagedProducts();
 
   return (
     <>
@@ -66,6 +66,16 @@ export function MangoStore() {
           viewport={{ once: true, margin: "-40px" }}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
+          {error && (
+            <p className="col-span-full rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          {isLoading && (
+            <p className="col-span-full text-sm text-muted-foreground">
+              Loading products...
+            </p>
+          )}
           {products.map((product, index) => (
             <MangoCard key={product.id} product={product} index={index} />
           ))}

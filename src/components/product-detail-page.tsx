@@ -38,7 +38,7 @@ export function ProductDetailPage({
   initialProduct,
   productId,
 }: ProductDetailPageProps) {
-  const products = useManagedProducts();
+  const { products } = useManagedProducts();
   const product =
     products.find((item) => item.id === productId) ?? initialProduct;
   const cart = useCartContext();

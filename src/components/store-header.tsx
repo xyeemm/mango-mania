@@ -1,8 +1,8 @@
 "use client";
 
-import { LayoutDashboard, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useCartContext } from "@/context/cart-context";
 
 type StoreHeaderProps = {

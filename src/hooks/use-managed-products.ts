@@ -1,33 +1,52 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { MANGO_PRODUCTS } from "@/lib/mangos";
 import {
   MANAGED_PRODUCTS_EVENT,
-  MANAGED_PRODUCTS_STORAGE_KEY,
-  readManagedProducts,
+  fetchProducts,
 } from "@/lib/managed-products";
 
-function subscribeToManagedProducts(onStoreChange: () => void) {
-  function handleStorage(event: StorageEvent) {
-    if (event.key === MANAGED_PRODUCTS_STORAGE_KEY) {
-      onStoreChange();
-    }
-  }
-
-  window.addEventListener("storage", handleStorage);
-  window.addEventListener(MANAGED_PRODUCTS_EVENT, onStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStorage);
-    window.removeEventListener(MANAGED_PRODUCTS_EVENT, onStoreChange);
-  };
-}
-
 export function useManagedProducts() {
-  return useSyncExternalStore(
-    subscribeToManagedProducts,
-    readManagedProducts,
-    () => MANGO_PRODUCTS
-  );
+  const [products, setProducts] = useState(MANGO_PRODUCTS);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducts() {
+      try {
+        setIsLoading(true);
+        const nextProducts = await fetchProducts();
+
+        if (active) {
+          setProducts(nextProducts);
+          setError(null);
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unable to load products."
+          );
+        }
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadProducts();
+    window.addEventListener(MANAGED_PRODUCTS_EVENT, loadProducts);
+
+    return () => {
+      active = false;
+      window.removeEventListener(MANAGED_PRODUCTS_EVENT, loadProducts);
+    };
+  }, []);
+
+  return { products, error, isLoading };
 }
