@@ -2,9 +2,8 @@ import {
 	initProductsCollection,
 	serializeProduct,
 	validateProduct,
-	type MangoProduct,
 } from '@/lib/mongodb'
-
+import { type MangoProduct } from '@/types/mango'
 type ProductRouteContext = {
 	params: Promise<{ id: string }>
 }
