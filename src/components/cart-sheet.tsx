@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import type { CartApi } from "@/hooks/use-cart";
 import { formatPrice } from "@/lib/mangos";
+import { addOrder, createStoreOrder } from "@/lib/orders";
 
 type CartSheetProps = {
   open: boolean;
@@ -56,6 +57,15 @@ export function CartSheet({ open, onOpenChange, cart }: CartSheetProps) {
       toast.error("Please fill in all delivery details.");
       return;
     }
+    const order = createStoreOrder({
+      address: form.address,
+      items: cart.items,
+      name: form.name,
+      phone: form.phone,
+      total: cart.total,
+    });
+
+    addOrder(order);
     setOrderTotal(cart.total);
     setStep("confirmed");
     cart.clearCart();
