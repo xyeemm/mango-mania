@@ -27,7 +27,7 @@ export function StoreHeader({ onCartOpen }: StoreHeaderProps) {
           </div>
         </Link>
 
-        <nav className="ml-auto hidden items-center gap-1 sm:flex">
+        {/* <nav className="ml-auto hidden items-center gap-1 sm:flex">
           <Link
             href="/admin"
             className={buttonVariants({ variant: "ghost", size: "sm" })}
@@ -35,7 +35,7 @@ export function StoreHeader({ onCartOpen }: StoreHeaderProps) {
             <LayoutDashboard />
             Admin
           </Link>
-        </nav>
+        </nav> */}
 
         <Button
           variant="outline"
