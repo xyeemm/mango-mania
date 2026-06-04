@@ -2,6 +2,7 @@
 
 import {
   LayoutDashboard,
+  ListOrdered,
   Plus,
   RotateCcw,
   Save,
@@ -17,15 +18,15 @@ import type {
   ReactNode,
   TextareaHTMLAttributes,
 } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useManagedProducts } from "@/hooks/use-managed-products";
+import { useOrders } from "@/hooks/use-orders";
 import { MANGO_PRODUCTS, MangoProduct, formatPrice } from "@/lib/mangos";
-import {
-  readManagedProducts,
-  saveManagedProducts,
-} from "@/lib/managed-products";
+import type { StoreOrder } from "@/lib/orders";
+import { saveManagedProducts } from "@/lib/managed-products";
 import { cn } from "@/lib/utils";
 
 type ProductForm = {
@@ -84,6 +85,18 @@ const emptyForm: ProductForm = {
   storage: "",
   delivery: "",
 };
+
+function subscribeToClientReady() {
+  return () => {};
+}
+
+function getClientReadySnapshot() {
+  return true;
+}
+
+function getServerReadySnapshot() {
+  return false;
+}
 
 function productToForm(product: MangoProduct): ProductForm {
   return {
@@ -256,16 +269,20 @@ async function uploadImageFile(file: File) {
 }
 
 export function AdminProductsPanel() {
-  const [products, setProducts] = useState<MangoProduct[]>(readManagedProducts);
+  const managedProducts = useManagedProducts();
+  const managedOrders = useOrders();
+  const isMounted = useSyncExternalStore(
+    subscribeToClientReady,
+    getClientReadySnapshot,
+    getServerReadySnapshot
+  );
   const [selectedId, setSelectedId] = useState<string>("new");
   const [form, setForm] = useState<ProductForm>(emptyForm);
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState("Ready to manage the catalog.");
   const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    saveManagedProducts(products);
-  }, [products]);
+  const products = isMounted ? managedProducts : MANGO_PRODUCTS;
+  const orders = isMounted ? managedOrders : [];
 
   const selectedProduct = products.find((product) => product.id === selectedId);
 
@@ -291,8 +308,10 @@ export function AdminProductsPanel() {
       productCount: products.length,
       taggedCount: products.filter((product) => product.tag).length,
       averagePrice,
+      orderCount: orders.length,
+      orderRevenue: orders.reduce((sum, order) => sum + order.total, 0),
     };
-  }, [products]);
+  }, [orders, products]);
 
   function updateField<K extends keyof ProductForm>(
     field: K,
@@ -307,6 +326,18 @@ export function AdminProductsPanel() {
 
       return nextForm;
     });
+  }
+
+  function updateProducts(
+    nextProducts:
+      | MangoProduct[]
+      | ((currentProducts: MangoProduct[]) => MangoProduct[])
+  ) {
+    saveManagedProducts(
+      typeof nextProducts === "function"
+        ? nextProducts(products)
+        : nextProducts
+    );
   }
 
   function appendImageUrls(urls: string[]) {
@@ -387,7 +418,7 @@ export function AdminProductsPanel() {
       return;
     }
 
-    setProducts((currentProducts) =>
+    updateProducts((currentProducts) =>
       currentProducts
         .filter((item) => item.id !== productId)
         .map((item) => ({
@@ -410,7 +441,7 @@ export function AdminProductsPanel() {
       return;
     }
 
-    setProducts(MANGO_PRODUCTS);
+    updateProducts(MANGO_PRODUCTS);
     setSelectedId("new");
     setForm(emptyForm);
     setNotice("Catalog reset to the original products.");
@@ -442,7 +473,7 @@ export function AdminProductsPanel() {
 
     const savedProduct = formToProduct(form, existingProduct);
 
-    setProducts((currentProducts) => {
+    updateProducts((currentProducts) => {
       if (selectedId === "new") {
         return [savedProduct, ...currentProducts];
       }
@@ -501,6 +532,10 @@ export function AdminProductsPanel() {
             <Metric label="Products" value={String(stats.productCount)} />
             <Metric label="Tagged" value={String(stats.taggedCount)} />
             <Metric label="Avg." value={formatPrice(stats.averagePrice)} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Metric label="Orders" value={String(stats.orderCount)} />
+            <Metric label="Revenue" value={formatPrice(stats.orderRevenue)} />
           </div>
 
           <div className="rounded-lg border bg-card">
@@ -843,7 +878,182 @@ export function AdminProductsPanel() {
           </div>
         </form>
       </section>
+
+      <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6">
+        <div className="rounded-lg border bg-card">
+          <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <ListOrdered className="size-4" />
+              </span>
+              <div>
+                <h2 className="font-heading text-xl font-semibold tracking-tight">
+                  Orders
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Checkout orders with customer and product details.
+                </p>
+              </div>
+            </div>
+            <p className="text-sm font-medium tabular-nums">
+              {orders.length} total
+            </p>
+          </div>
+
+          {orders.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">
+              No orders have been placed yet.
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-3 p-3 md:hidden">
+                {orders.map((order) => (
+                  <OrderCard key={order.id} order={order} />
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[980px] text-left text-sm">
+                  <thead className="border-b bg-muted/40 text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Order</th>
+                      <th className="px-4 py-3 font-medium">Customer</th>
+                      <th className="px-4 py-3 font-medium">Address</th>
+                      <th className="px-4 py-3 font-medium">Items</th>
+                      <th className="px-4 py-3 text-right font-medium">Total</th>
+                      <th className="px-4 py-3 font-medium">Payment</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {orders.map((order) => (
+                      <tr key={order.id} className="align-top">
+                        <td className="px-4 py-4">
+                          <p className="font-medium">{order.id}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatOrderDate(order.createdAt)}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <p className="font-medium">{order.customer.name}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {order.customer.phone}
+                          </p>
+                        </td>
+                        <td className="max-w-[220px] px-4 py-4 text-muted-foreground">
+                          {order.customer.address}
+                        </td>
+                        <td className="px-4 py-4">
+                          <OrderItems order={order} />
+                        </td>
+                        <td className="px-4 py-4 text-right font-semibold tabular-nums">
+                          {formatPrice(order.total)}
+                          <p className="mt-1 text-xs font-normal text-muted-foreground">
+                            {order.itemCount} item
+                            {order.itemCount === 1 ? "" : "s"}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4 text-muted-foreground">
+                          {order.paymentMethod}
+                        </td>
+                        <td className="px-4 py-4">
+                          <OrderStatus status={order.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
     </main>
+  );
+}
+
+function formatOrderDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function OrderStatus({ status }: { status: StoreOrder["status"] }) {
+  return (
+    <span className="rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+      {status}
+    </span>
+  );
+}
+
+function OrderItems({ order }: { order: StoreOrder }) {
+  return (
+    <div className="space-y-2">
+      {order.items.map((item) => (
+        <div key={`${order.id}-${item.productId}`}>
+          <p className="font-medium">
+            {item.name} x {item.quantity}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {item.variety} · {formatPrice(item.price)} {item.unit} · line{" "}
+            {formatPrice(item.lineTotal)}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function OrderCard({ order }: { order: StoreOrder }) {
+  return (
+    <article className="rounded-lg border bg-background p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-medium">{order.id}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatOrderDate(order.createdAt)}
+          </p>
+        </div>
+        <OrderStatus status={order.status} />
+      </div>
+
+      <div className="mt-4 grid gap-3 text-sm">
+        <div>
+          <p className="text-xs font-medium uppercase text-muted-foreground">
+            Customer
+          </p>
+          <p className="mt-1 font-medium">{order.customer.name}</p>
+          <p className="text-muted-foreground">{order.customer.phone}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase text-muted-foreground">
+            Address
+          </p>
+          <p className="mt-1 text-muted-foreground">{order.customer.address}</p>
+        </div>
+        <div>
+          <p className="text-xs font-medium uppercase text-muted-foreground">
+            Items
+          </p>
+          <div className="mt-2">
+            <OrderItems order={order} />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center justify-between border-t pt-3">
+        <div>
+          <p className="text-xs text-muted-foreground">{order.paymentMethod}</p>
+          <p className="text-xs text-muted-foreground">
+            {order.itemCount} item{order.itemCount === 1 ? "" : "s"}
+          </p>
+        </div>
+        <p className="text-lg font-semibold tabular-nums">
+          {formatPrice(order.total)}
+        </p>
+      </div>
+    </article>
   );
 }
 
@@ -872,5 +1082,3 @@ function Field({
     </div>
   );
 }
-
-// write something here
