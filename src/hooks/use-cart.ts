@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MangoProduct } from "@/lib/mangos";
 
 export type CartItem = {
@@ -8,8 +8,51 @@ export type CartItem = {
   quantity: number;
 };
 
+const CART_STORAGE_KEY = "mango-mania-cart";
+
+function isCartItem(value: unknown): value is CartItem {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const item = value as Partial<CartItem>;
+
+  return (
+    typeof item.quantity === "number" &&
+    item.quantity > 0 &&
+    !!item.product &&
+    typeof item.product === "object" &&
+    typeof item.product.id === "string" &&
+    typeof item.product.name === "string"
+  );
+}
+
+function readSavedCart(): CartItem[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+
+  if (!savedCart) {
+    return [];
+  }
+
+  try {
+    const parsedCart = JSON.parse(savedCart) as unknown;
+
+    return Array.isArray(parsedCart) ? parsedCart.filter(isCartItem) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function useCart() {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(readSavedCart);
+
+  useEffect(() => {
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
 
   const addItem = useCallback((product: MangoProduct) => {
     setItems((prev) => {
@@ -52,10 +95,7 @@ export function useCart() {
     [items]
   );
 
-  const itemCount = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
-  );
+  const itemCount = items.length;
 
   return {
     items,
