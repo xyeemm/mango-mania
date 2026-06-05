@@ -1,75 +1,67 @@
-import {
-	getProductsCollection,
-	serializeProduct,
-	validateProduct,
-} from '@/lib/mongodb'
+// src/app/api/products/route.ts
+
+import { getProductsCollection, serializeProduct, validateProduct } from '@/lib/mongodb'
 import { type MangoProduct } from '@/types/mango'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-type RouteParams = {
-	params: Promise<{ id: string }>
+/**
+ * GET /api/products
+ * Fetches ALL items to populate your shop grids and admin dashboard list
+ */
+export async function GET(request: NextRequest) {
+    try {
+        const collection = await getProductsCollection()
+        
+        // Grab everything out of your MongoDB collection as a clean array
+        const rawProducts = await collection.find({}).toArray()
+        
+        // Run them through your serializer to format MongoDB _id fields properly
+        const products = rawProducts.map(serializeProduct)
+        
+        return NextResponse.json(products)
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Failed to fetch product catalog.' },
+            { status: 500 }
+        )
+    }
 }
 
 /**
- * GET /api/products/[id]
- * Fetch a single product by its custom string ID
+ * POST /api/products
+ * Creates a brand new mango product from your admin dashboard entry form
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-	const { id } = await params
-	const collection = await getProductsCollection()
+export async function POST(request: NextRequest) {
+    try {
+        const body = (await request.json()) as MangoProduct
+        const collection = await getProductsCollection()
 
-	const product = await collection.findOne({ id })
+        // 1. Validate form fields format
+        if (!validateProduct(body)) {
+            return NextResponse.json(
+                { error: 'Invalid product payload format.' },
+                { status: 400 }
+            )
+        }
 
-	if (!product) {
-		return Response.json({ error: 'Product not found.' }, { status: 404 })
-	}
+        // 2. Check if a product with that custom string ID already exists
+        const existing = await collection.findOne({ id: body.id })
+        if (existing) {
+            return NextResponse.json(
+                { error: 'Product ID already exists inside MongoDB.' },
+                { status: 409 }
+            )
+        }
 
-	return Response.json(serializeProduct(product))
-}
-
-/**
- * PUT /api/products/[id]
- * Updates an existing product details completely
- */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-	const { id } = await params
-	const body = (await request.json()) as MangoProduct
-	const collection = await getProductsCollection()
-
-	// 1. Ensure the product actually exists before trying to update it
-	const existingProduct = await collection.findOne({ id })
-	if (!existingProduct) {
-		return Response.json({ error: 'Product not found.' }, { status: 404 })
-	}
-
-	// 2. Validate the incoming data update format
-	if (!validateProduct(body)) {
-		return Response.json(
-			{ error: 'Invalid product payload format.' },
-			{ status: 400 },
-		)
-	}
-
-	// 3. Prevent changing the core lookup ID string accidentally via payload
-	const updatedData = { ...body, id }
-
-	await collection.replaceOne({ id }, updatedData)
-	return Response.json(updatedData)
-}
-
-/**
- * DELETE /api/products/[id]
- * Deletes a single specific product from the database
- */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-	const { id } = await params
-	const collection = await getProductsCollection()
-
-	const result = await collection.deleteOne({ id })
-
-	if (result.deletedCount === 0) {
-		return Response.json({ error: 'Product not found.' }, { status: 404 })
-	}
-
-	return Response.json({ message: `Product ${id} successfully removed.` })
+        // 3. Save the new product straight to the cloud cluster database
+        await collection.insertOne({ ...body })
+        
+        // Return the clean data object back so the frontend can read it successfully
+        return NextResponse.json(body, { status: 201 })
+    } catch (error) {
+        return NextResponse.json(
+            { error: 'Internal server database error.' },
+            { status: 500 }
+        )
+    }
 }

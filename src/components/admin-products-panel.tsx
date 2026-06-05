@@ -11,9 +11,9 @@ import {
 	resetProducts,
 	updateProduct,
 } from '@/lib/managed-products'
-import { MANGO_PRODUCTS, MangoProduct, formatPrice } from '@/lib/mangos'
 import type { StoreOrder } from '@/lib/orders'
 import { cn } from '@/lib/utils'
+import type { MangoProduct } from '@/types/mango'
 import {
 	LayoutDashboard,
 	ListOrdered,
@@ -31,7 +31,8 @@ import type {
 	ReactNode,
 	TextareaHTMLAttributes,
 } from 'react'
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useState } from 'react'
+import { formatPrice } from '@/hooks/currency'
 
 type ProductForm = {
 	id: string
@@ -68,7 +69,6 @@ type CloudinarySignedUploadResponse = {
 const cloudinaryCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 const cloudinaryUploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
 const cloudinaryFolder = process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER
-const EMPTY_ORDERS: StoreOrder[] = []
 
 const emptyForm: ProductForm = {
 	id: '',
@@ -90,17 +90,7 @@ const emptyForm: ProductForm = {
 	delivery: '',
 }
 
-function subscribeToClientReady() {
-	return () => {}
-}
 
-function getClientReadySnapshot() {
-	return true
-}
-
-function getServerReadySnapshot() {
-	return false
-}
 
 function productToForm(product: MangoProduct): ProductForm {
 	return {
@@ -282,24 +272,14 @@ export function AdminProductsPanel() {
 	const {
 		error: productsError,
 		isLoading: productsLoading,
-		products: managedProducts,
+		products,
 	} = useManagedProducts()
-	const managedOrders = useOrders()
-	const isMounted = useSyncExternalStore(
-		subscribeToClientReady,
-		getClientReadySnapshot,
-		getServerReadySnapshot,
-	)
+	const orders = useOrders()
 	const [selectedId, setSelectedId] = useState<string>('new')
 	const [form, setForm] = useState<ProductForm>(emptyForm)
 	const [query, setQuery] = useState('')
 	const [notice, setNotice] = useState('Ready to manage the catalog.')
 	const [isUploading, setIsUploading] = useState(false)
-	const products = isMounted ? managedProducts : MANGO_PRODUCTS
-	const orders = useMemo(
-		() => (isMounted ? managedOrders : EMPTY_ORDERS),
-		[isMounted, managedOrders],
-	)
 
 	const selectedProduct = products.find((product) => product.id === selectedId)
 
@@ -495,7 +475,9 @@ export function AdminProductsPanel() {
 				await updateProduct(selectedId, savedProduct)
 			}
 		} catch (error) {
-			setNotice(error instanceof Error ? error.message : 'Unable to save product.')
+			setNotice(
+				error instanceof Error ? error.message : 'Unable to save product.',
+			)
 			return
 		}
 
@@ -523,9 +505,9 @@ export function AdminProductsPanel() {
 						<Link href='/' className={buttonVariants({ variant: 'outline' })}>
 							Storefront
 						</Link>
-							<Button
-								type='button'
-								variant='outline'
+						<Button
+							type='button'
+							variant='outline'
 							onClick={() =>
 								document
 									.getElementById('orders-section')
@@ -533,12 +515,12 @@ export function AdminProductsPanel() {
 							}
 						>
 							<ListOrdered className='size-4' />
-								Orders
-							</Button>
-							<Button type='button' variant='outline' onClick={resetCatalog}>
-								Reset
-							</Button>
-							<Button type='button' onClick={startCreate}>
+							Orders
+						</Button>
+						<Button type='button' variant='outline' onClick={resetCatalog}>
+							Reset
+						</Button>
+						<Button type='button' onClick={startCreate}>
 							<Plus />
 							New product
 						</Button>
@@ -618,17 +600,19 @@ export function AdminProductsPanel() {
 
 				<form onSubmit={submitProduct} className='rounded-lg border bg-card'>
 					<div className='flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-between'>
-							<div>
-								<p className='text-sm font-medium'>
-									{selectedProduct
-										? `Editing ${selectedProduct.name}`
-										: 'Create product'}
-								</p>
-								<p className='mt-1 text-sm text-muted-foreground'>
-									{productsError ??
-										(productsLoading ? 'Loading products from MongoDB...' : notice)}
-								</p>
-							</div>
+						<div>
+							<p className='text-sm font-medium'>
+								{selectedProduct
+									? `Editing ${selectedProduct.name}`
+									: 'Create product'}
+							</p>
+							<p className='mt-1 text-sm text-muted-foreground'>
+								{productsError ??
+									(productsLoading
+										? 'Loading products from MongoDB...'
+										: notice)}
+							</p>
+						</div>
 
 						<div className='flex flex-wrap gap-2'>
 							<Button type='button' variant='outline' onClick={startCreate}>

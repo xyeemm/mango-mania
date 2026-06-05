@@ -20,7 +20,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { CartApi } from "@/hooks/use-cart";
-import { formatPrice } from "@/lib/mangos";
+import { formatPrice } from "@/hooks/currency";
 import { addOrder, createStoreOrder } from "@/lib/orders";
 
 type CartSheetProps = {
