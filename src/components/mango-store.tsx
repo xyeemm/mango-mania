@@ -84,11 +84,20 @@ export function MangoStore() {
 					)}
 
 					{/* 2. Map over the state-managed array safely instead of the raw function */}
-					{!isLoading &&
-						!error &&
-						products?.map((product: MangoProduct, index: any) => (
-							<MangoCard key={product.id} product={product} index={index} />
-						))}
+					{/* FIXED: We only mount the animating container once the products are actually here */}
+					{!isLoading && !error && products?.length > 0 && (
+						<motion.div
+							variants={containerVariants}
+							initial='hidden'
+							whileInView='visible'
+							viewport={{ once: true, margin: '-40px' }}
+							className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
+						>
+							{products.map((product: MangoProduct, index: any) => (
+								<MangoCard key={product.id} product={product} index={index} />
+							))}
+						</motion.div>
+					)}
 
 					{/* Fallback view if the cloud database collection is currently empty */}
 					{!isLoading && !error && products?.length === 0 && (
