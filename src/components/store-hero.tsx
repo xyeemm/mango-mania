@@ -241,8 +241,8 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 										className='relative aspect-[4/5] w-full bg-muted'
 									>
 										<Image
-											src={product.images[0]}
-											alt={product.imageAlt}
+											src={product?.images[0]}
+											alt={product?.imageAlt}
 											fill
 											sizes='280px'
 											className='object-cover'
@@ -292,8 +292,8 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 							className='relative h-44 w-36 shrink-0 overflow-hidden rounded-xl border bg-card shadow-md'
 						>
 							<Image
-								src={product.images[0]}
-								alt={product.imageAlt}
+								src={product?.images[0]}
+								alt={product?.imageAlt}
 								fill
 								sizes='144px'
 								className='object-cover'
