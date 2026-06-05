@@ -64,49 +64,34 @@ export function MangoStore() {
 					</motion.p>
 				</motion.div>
 
-				<motion.div
-					variants={containerVariants}
-					initial='hidden'
-					whileInView='visible'
-					viewport={{ once: true, margin: '-40px' }}
-					className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
-				>
-					{error && (
-						<p className='col-span-full rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive'>
-							{error}
-						</p>
-					)}
+				{/* 2. Map over the state-managed array safely instead of the raw function */}
+				{/* FIXED: We only mount the animating container once the products are actually here */}
+				{!isLoading && !error && products?.length > 0 && (
+					<motion.div
+						variants={containerVariants}
+						initial='hidden'
+						whileInView='visible'
+						viewport={{ once: true, margin: '-40px' }}
+						className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
+					>
+						{isLoading && (
+							<p className='col-span-full text-sm text-muted-foreground'>
+								Loading products...
+							</p>
+						)}
+						{products.map((product: MangoProduct, index: any) => (
+							<MangoCard key={product.id} product={product} index={index} />
+						))}
+					</motion.div>
+				)}
 
-					{isLoading && (
-						<p className='col-span-full text-sm text-muted-foreground'>
-							Loading products...
-						</p>
-					)}
-
-					{/* 2. Map over the state-managed array safely instead of the raw function */}
-					{/* FIXED: We only mount the animating container once the products are actually here */}
-					{!isLoading && !error && products?.length > 0 && (
-						<motion.div
-							variants={containerVariants}
-							initial='hidden'
-							whileInView='visible'
-							viewport={{ once: true, margin: '-40px' }}
-							className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'
-						>
-							{products.map((product: MangoProduct, index: any) => (
-								<MangoCard key={product.id} product={product} index={index} />
-							))}
-						</motion.div>
-					)}
-
-					{/* Fallback view if the cloud database collection is currently empty */}
-					{!isLoading && !error && products?.length === 0 && (
-						<p className='col-span-full text-sm text-muted-foreground italic text-center py-8'>
-							No delicious mangos found in stock right now. Use the admin panel
-							to add some!
-						</p>
-					)}
-				</motion.div>
+				{/* Fallback view if the cloud database collection is currently empty */}
+				{!isLoading && !error && products?.length === 0 && (
+					<p className='col-span-full text-sm text-muted-foreground italic text-center py-8'>
+						No delicious mangos found in stock right now. Use the admin panel to
+						add some!
+					</p>
+				)}
 			</section>
 		</>
 	)
