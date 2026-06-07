@@ -15,22 +15,22 @@ const getBaseUrl = () => {
 }
 // HELPER: Dynamic data fetcher that speaks directly to your MongoDB API routes
 async function fetchProductData(id: string): Promise<MangoProduct | null> {
-  try {
-    const res = await fetch(`${getBaseUrl()}/api/products/${id}`, {
-      // FIXED: Forces Next.js to bypass all cache mechanics and fetch live from MongoDB every single time
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      }
-    })
+	try {
+		const res = await fetch(`${getBaseUrl()}/api/products/${id}`, {
+			// FIXED: Forces Next.js to bypass all cache mechanics and fetch live from MongoDB every single time
+			cache: 'no-store',
+			headers: {
+				'Cache-Control': 'no-cache',
+				Pragma: 'no-cache',
+			},
+		})
 
-    if (!res.ok) return null
-    return await res.json()
-  } catch (error) {
-    console.error('Error loading product data from MongoDB:', error)
-    return null
-  }
+		if (!res.ok) return null
+		return await res.json()
+	} catch (error) {
+		console.error('Error loading product data from MongoDB:', error)
+		return null
+	}
 }
 
 /**
