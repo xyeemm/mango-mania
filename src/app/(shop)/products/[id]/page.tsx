@@ -8,10 +8,18 @@ type PageProps = {
 }
 
 // HELPER: Base URL utility to handle both local development and live hosting
+// HELPER: Base URL utility to handle local dev, Vercel deployments, and custom live domains
 const getBaseUrl = () => {
-	if (typeof window !== 'undefined') return ''
-	if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
-	return 'http://localhost:3000'
+    if (typeof window !== 'undefined') return ''
+    
+    // 1. Check your custom environment variable
+    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
+    
+    // 2. Automatically catch Vercel's native deployment domain URL
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+    
+    // 3. Fallback for your local MacBook development environment
+    return 'http://localhost:3000'
 }
 // HELPER: Dynamic data fetcher that speaks directly to your MongoDB API routes
 async function fetchProductData(id: string): Promise<MangoProduct | null> {
@@ -33,22 +41,6 @@ async function fetchProductData(id: string): Promise<MangoProduct | null> {
 	}
 }
 
-/**
- * 1. OPTIONAL: Dynamic Params Pre-generation
- * Instead of mapping a hardcoded array, we call the global API route
- * to tell Next.js exactly which dynamic mango pages to build ahead of time.
- */
-export async function generateStaticParams() {
-	try {
-		const res = await fetch(`${getBaseUrl()}/api/products`)
-		if (!res.ok) return []
-
-		const products: MangoProduct[] = await res.json()
-		return products.map((product) => ({ id: product.id }))
-	} catch (error) {
-		return [] // Fallback cleanly if database is unreachable during build
-	}
-}
 
 /**
  * 2. Dynamic Meta Engine
