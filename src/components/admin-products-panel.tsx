@@ -3,6 +3,7 @@
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { formatPrice } from '@/hooks/currency'
 import { useManagedProducts } from '@/hooks/use-managed-products'
 import { useOrders } from '@/hooks/use-orders'
 import {
@@ -32,7 +33,6 @@ import type {
 	TextareaHTMLAttributes,
 } from 'react'
 import { useMemo, useState } from 'react'
-import { formatPrice } from '@/hooks/currency'
 
 type ProductForm = {
 	id: string
@@ -89,8 +89,6 @@ const emptyForm: ProductForm = {
 	storage: '',
 	delivery: '',
 }
-
-
 
 function productToForm(product: MangoProduct): ProductForm {
 	return {
@@ -965,7 +963,10 @@ export function AdminProductsPanel() {
 											<tr key={order.id} className='align-top'>
 												<td className='px-4 py-4'>
 													<p className='font-medium'>{order.id}</p>
-													<p className='mt-1 text-xs text-muted-foreground' suppressHydrationWarning>
+													<p
+														className='mt-1 text-xs text-muted-foreground'
+														suppressHydrationWarning
+													>
 														{formatOrderDate(order.createdAt)}
 													</p>
 												</td>
@@ -1046,7 +1047,9 @@ function OrderCard({ order }: { order: StoreOrder }) {
 			<div className='flex items-start justify-between gap-3'>
 				<div>
 					<p className='font-medium'>{order.id}</p>
-					<p className='mt-1 text-xs text-muted-foreground' suppressHydrationWarning>
+					<p
+						className='mt-1 text-xs text-muted-foreground'
+					>
 						{formatOrderDate(order.createdAt)}
 					</p>
 				</div>
@@ -1096,7 +1099,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 	return (
 		<div className='rounded-lg border bg-card p-3'>
 			<p className='text-xs text-muted-foreground'>{label}</p>
-			<p className='mt-1 truncate text-lg font-semibold' suppressHydrationWarning>{value}</p>
+			<p
+				className='mt-1 truncate text-lg font-semibold'
+				suppressHydrationWarning
+			>
+				{value}
+			</p>
 		</div>
 	)
 }
