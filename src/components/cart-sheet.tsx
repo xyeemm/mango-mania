@@ -20,7 +20,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { CartApi } from "@/hooks/use-cart";
-import { formatPrice } from "@/lib/mangos";
+import { formatPrice } from "@/hooks/currency";
 import { addOrder, createStoreOrder } from "@/lib/orders";
 
 type CartSheetProps = {
@@ -43,6 +43,7 @@ export function CartSheet({ open, onOpenChange, cart }: CartSheetProps) {
     address: "",
   });
   const [orderTotal, setOrderTotal] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function resetAndClose() {
     setStep("cart");
@@ -51,26 +52,34 @@ export function CartSheet({ open, onOpenChange, cart }: CartSheetProps) {
     onOpenChange(false);
   }
 
-  function handlePlaceOrder(e: React.FormEvent) {
+  async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
       toast.error("Please fill in all delivery details.");
       return;
     }
-    const order = createStoreOrder({
-      address: form.address,
-      items: cart.items,
-      name: form.name,
-      phone: form.phone,
-      total: cart.total,
-    });
+    setIsSubmitting(true);
+    try {
+      const order = createStoreOrder({
+        address: form.address,
+        items: cart.items,
+        name: form.name,
+        phone: form.phone,
+        total: cart.total,
+      });
 
-    addOrder(order);
-    setOrderTotal(cart.total);
-    setStep("confirmed");
-    cart.clearCart();
-    toast.success("Order confirmed. We'll be in touch shortly.");
+      await addOrder(order);
+      setOrderTotal(cart.total);
+      setStep("confirmed");
+      cart.clearCart();
+      toast.success("Order confirmed. We'll be in touch shortly.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to place order.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
+
 
   return (
     <Sheet
@@ -167,18 +176,20 @@ export function CartSheet({ open, onOpenChange, cart }: CartSheetProps) {
                 Payment method: cash on delivery. No online payment is required.
               </p>
               <SheetFooter className="mt-auto flex-col gap-2 p-0 sm:flex-col">
-                <Button type="submit" className="w-full">
-                  Place order · {formatPrice(cart.total)}
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Placing order..." : `Place order · ${formatPrice(cart.total)}`}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full"
+                  disabled={isSubmitting}
                   onClick={() => setStep("cart")}
                 >
                   Back to cart
                 </Button>
               </SheetFooter>
+
             </motion.form>
           ) : (
             <motion.div

@@ -11,16 +11,27 @@ import { ProductGallery } from "@/components/product-gallery";
 import { RelatedProducts } from "@/components/related-products";
 import { useCartContext } from "@/context/cart-context";
 import { useManagedProducts } from "@/hooks/use-managed-products";
-import { formatPrice, type MangoProduct } from "@/lib/mangos";
+// FIXED: Pulling unified data structures from central type module
+import { type MangoProduct } from "@/types/mango";
 import { cn } from "@/lib/utils";
+
+// SAFE FALLBACK: Local currency formatter so you don't depend on static lib files
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(price);
+};
 
 const tagLabels = {
   bestseller: "Bestseller",
   seasonal: "Seasonal",
   new: "New",
+  "": ""
 } as const;
 
-const detailLabels: Record<keyof MangoProduct["details"], string> = {
+// FIXED: Cleaned up key indexing mapping to support dynamic objects safely
+const detailLabels: Record<string, string> = {
   origin: "Origin",
   season: "Season",
   weight: "Weight",
@@ -38,7 +49,7 @@ export function ProductDetailPage({
   initialProduct,
   productId,
 }: ProductDetailPageProps) {
-  const products = useManagedProducts();
+  const { products } = useManagedProducts();
   const product =
     products.find((item) => item.id === productId) ?? initialProduct;
   const cart = useCartContext();
@@ -46,6 +57,7 @@ export function ProductDetailPage({
     ? cart.items.find((i) => i.product.id === product.id)
     : undefined;
   const quantity = inCart?.quantity ?? 0;
+  
   const related = product
     ? product.relatedIds
         .map((id) => products.find((item) => item.id === id))
@@ -53,10 +65,7 @@ export function ProductDetailPage({
     : [];
 
   function handleAddToCart() {
-    if (!product) {
-      return;
-    }
-
+    if (!product) return;
     cart.addItem(product);
     toast.success(`${product.name} added to cart`);
   }
@@ -106,7 +115,7 @@ export function ProductDetailPage({
         >
           {product.tag && (
             <Badge className="w-fit bg-brand text-white hover:bg-brand/90">
-              {tagLabels[product.tag]}
+              {tagLabels[product.tag] || product.tag}
             </Badge>
           )}
 
@@ -130,25 +139,25 @@ export function ProductDetailPage({
 
           <h2 className="font-heading text-lg font-semibold">Specifications</h2>
           <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            {(Object.keys(product.details) as (keyof MangoProduct["details"])[]).map(
-              (key) => (
-                <div
-                  key={key}
-                  className="rounded-lg border bg-muted/40 px-4 py-3"
-                >
-                  <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {detailLabels[key]}
-                  </dt>
-                  <dd className="mt-1 text-sm font-medium">{product.details[key]}</dd>
-                </div>
-              )
-            )}
+            {Object.keys(product.details || {}).map((key) => (
+              <div
+                key={key}
+                className="rounded-lg border bg-muted/40 px-4 py-3"
+              >
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {detailLabels[key] || key}
+                </dt>
+                <dd className="mt-1 text-sm font-medium">
+                  {String(product.details[key])}
+                </dd>
+              </div>
+            ))}
           </dl>
 
           <div className="mt-8">
             {quantity === 0 ? (
               <Button size="lg" className="w-full sm:w-auto" onClick={handleAddToCart}>
-                <ShoppingBag data-icon="inline-start" />
+                <ShoppingBag className="mr-2 size-4" />
                 Add to cart
               </Button>
             ) : (
@@ -157,13 +166,14 @@ export function ProductDetailPage({
                   <Button
                     type="button"
                     variant="outline"
-                    size="icon-sm"
+                    size="icon"
+                    className="size-8"
                     aria-label="Decrease quantity"
                     onClick={() =>
                       cart.updateQuantity(product.id, quantity - 1)
                     }
                   >
-                    <Minus />
+                    <Minus className="size-3" />
                   </Button>
                   <span className="min-w-10 text-center font-semibold tabular-nums">
                     {quantity}
@@ -171,11 +181,12 @@ export function ProductDetailPage({
                   <Button
                     type="button"
                     variant="outline"
-                    size="icon-sm"
+                    size="icon"
+                    className="size-8"
                     aria-label="Increase quantity"
                     onClick={handleAddToCart}
                   >
-                    <Plus />
+                    <Plus className="size-3" />
                   </Button>
                 </div>
                 <span className="text-lg font-semibold tabular-nums">

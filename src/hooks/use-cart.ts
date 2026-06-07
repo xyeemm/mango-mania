@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { MangoProduct } from "@/lib/mangos";
+import type { MangoProduct } from "@/types/mango";
 
 export type CartItem = {
   product: MangoProduct;

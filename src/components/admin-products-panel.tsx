@@ -3,12 +3,18 @@
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { formatPrice } from '@/hooks/currency'
 import { useManagedProducts } from '@/hooks/use-managed-products'
 import { useOrders } from '@/hooks/use-orders'
-import { saveManagedProducts } from '@/lib/managed-products'
-import { MANGO_PRODUCTS, MangoProduct, formatPrice } from '@/lib/mangos'
+import {
+	createProduct,
+	deleteProductById,
+	resetProducts,
+	updateProduct,
+} from '@/lib/managed-products'
 import type { StoreOrder } from '@/lib/orders'
 import { cn } from '@/lib/utils'
+import type { MangoProduct } from '@/types/mango'
 import {
 	LayoutDashboard,
 	ListOrdered,
@@ -26,7 +32,7 @@ import type {
 	ReactNode,
 	TextareaHTMLAttributes,
 } from 'react'
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useState } from 'react'
 
 type ProductForm = {
 	id: string
@@ -82,18 +88,6 @@ const emptyForm: ProductForm = {
 	ripeness: '',
 	storage: '',
 	delivery: '',
-}
-
-function subscribeToClientReady() {
-	return () => {}
-}
-
-function getClientReadySnapshot() {
-	return true
-}
-
-function getServerReadySnapshot() {
-	return false
 }
 
 function productToForm(product: MangoProduct): ProductForm {
@@ -273,20 +267,22 @@ async function uploadImageFile(file: File) {
 }
 
 export function AdminProductsPanel() {
-	const managedProducts = useManagedProducts()
-	const managedOrders = useOrders()
-	const isMounted = useSyncExternalStore(
-		subscribeToClientReady,
-		getClientReadySnapshot,
-		getServerReadySnapshot,
-	)
+	const {
+		error: productsError,
+		isLoading: productsLoading,
+		products,
+	} = useManagedProducts()
+	const {
+		orders = [],
+		isLoading: ordersLoading,
+		error: ordersError,
+	} = useOrders()
+
 	const [selectedId, setSelectedId] = useState<string>('new')
 	const [form, setForm] = useState<ProductForm>(emptyForm)
 	const [query, setQuery] = useState('')
 	const [notice, setNotice] = useState('Ready to manage the catalog.')
 	const [isUploading, setIsUploading] = useState(false)
-	const products = isMounted ? managedProducts : MANGO_PRODUCTS
-	const orders = isMounted ? managedOrders : []
 
 	const selectedProduct = products.find((product) => product.id === selectedId)
 
@@ -330,18 +326,6 @@ export function AdminProductsPanel() {
 
 			return nextForm
 		})
-	}
-
-	function updateProducts(
-		nextProducts:
-			| MangoProduct[]
-			| ((currentProducts: MangoProduct[]) => MangoProduct[]),
-	) {
-		saveManagedProducts(
-			typeof nextProducts === 'function'
-				? nextProducts(products)
-				: nextProducts,
-		)
 	}
 
 	function appendImageUrls(urls: string[]) {
@@ -411,7 +395,7 @@ export function AdminProductsPanel() {
 		setNotice(`Editing ${product.name}.`)
 	}
 
-	function deleteProduct(productId: string) {
+	async function deleteProduct(productId: string) {
 		const product = products.find((item) => item.id === productId)
 
 		if (!product) {
@@ -424,16 +408,14 @@ export function AdminProductsPanel() {
 			return
 		}
 
-		updateProducts((currentProducts) =>
-			currentProducts
-				.filter((item) => item.id !== productId)
-				.map((item) => ({
-					...item,
-					relatedIds: item.relatedIds.filter(
-						(relatedId) => relatedId !== productId,
-					),
-				})),
-		)
+		try {
+			await deleteProductById(productId)
+		} catch (error) {
+			setNotice(
+				error instanceof Error ? error.message : 'Unable to delete product.',
+			)
+			return
+		}
 
 		if (selectedId === productId) {
 			startCreate()
@@ -442,9 +424,26 @@ export function AdminProductsPanel() {
 		setNotice(`${product.name} was deleted.`)
 	}
 
-	function resetCatalog() {}
+	async function resetCatalog() {
+		const confirmed = window.confirm('Reset products to the original catalog?')
 
-	function submitProduct(event: FormEvent<HTMLFormElement>) {
+		if (!confirmed) {
+			return
+		}
+
+		try {
+			await resetProducts()
+			setSelectedId('new')
+			setForm(emptyForm)
+			setNotice('Catalog reset to the original products.')
+		} catch (error) {
+			setNotice(
+				error instanceof Error ? error.message : 'Unable to reset products.',
+			)
+		}
+	}
+
+	async function submitProduct(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
 
 		const productId = form.id.trim()
@@ -472,22 +471,18 @@ export function AdminProductsPanel() {
 
 		const savedProduct = formToProduct(form, existingProduct)
 
-		updateProducts((currentProducts) => {
+		try {
 			if (selectedId === 'new') {
-				return [savedProduct, ...currentProducts]
+				await createProduct(savedProduct)
+			} else {
+				await updateProduct(selectedId, savedProduct)
 			}
-
-			return currentProducts.map((product) =>
-				product.id === selectedId
-					? savedProduct
-					: {
-							...product,
-							relatedIds: product.relatedIds.map((relatedId) =>
-								relatedId === selectedId ? savedProduct.id : relatedId,
-							),
-						},
+		} catch (error) {
+			setNotice(
+				error instanceof Error ? error.message : 'Unable to save product.',
 			)
-		})
+			return
+		}
 
 		setSelectedId(savedProduct.id)
 		setNotice(`${savedProduct.name} was saved.`)
@@ -524,6 +519,9 @@ export function AdminProductsPanel() {
 						>
 							<ListOrdered className='size-4' />
 							Orders
+						</Button>
+						<Button type='button' variant='outline' onClick={resetCatalog}>
+							Reset
 						</Button>
 						<Button type='button' onClick={startCreate}>
 							<Plus />
@@ -611,7 +609,15 @@ export function AdminProductsPanel() {
 									? `Editing ${selectedProduct.name}`
 									: 'Create product'}
 							</p>
-							<p className='mt-1 text-sm text-muted-foreground'>{notice}</p>
+							<p className='mt-1 text-sm text-muted-foreground'>
+								{productsError ??
+									ordersError ??
+									(productsLoading
+										? 'Loading products from MongoDB...'
+										: ordersLoading
+											? 'Loading orders from MongoDB...'
+											: notice)}
+							</p>
 						</div>
 
 						<div className='flex flex-wrap gap-2'>
@@ -957,7 +963,10 @@ export function AdminProductsPanel() {
 											<tr key={order.id} className='align-top'>
 												<td className='px-4 py-4'>
 													<p className='font-medium'>{order.id}</p>
-													<p className='mt-1 text-xs text-muted-foreground'>
+													<p
+														className='mt-1 text-xs text-muted-foreground'
+														suppressHydrationWarning
+													>
 														{formatOrderDate(order.createdAt)}
 													</p>
 												</td>
@@ -1038,7 +1047,9 @@ function OrderCard({ order }: { order: StoreOrder }) {
 			<div className='flex items-start justify-between gap-3'>
 				<div>
 					<p className='font-medium'>{order.id}</p>
-					<p className='mt-1 text-xs text-muted-foreground'>
+					<p
+						className='mt-1 text-xs text-muted-foreground'
+					>
 						{formatOrderDate(order.createdAt)}
 					</p>
 				</div>
@@ -1088,7 +1099,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 	return (
 		<div className='rounded-lg border bg-card p-3'>
 			<p className='text-xs text-muted-foreground'>{label}</p>
-			<p className='mt-1 truncate text-lg font-semibold'>{value}</p>
+			<p
+				className='mt-1 truncate text-lg font-semibold'
+				suppressHydrationWarning
+			>
+				{value}
+			</p>
 		</div>
 	)
 }

@@ -16,7 +16,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useCartContext } from "@/context/cart-context";
-import { formatPrice, type MangoProduct } from "@/lib/mangos";
+import { formatPrice} from "@/hooks/currency";
+import {MangoProduct} from "@/types/mango"
 import { cn } from "@/lib/utils";
 
 const tagLabels = {
