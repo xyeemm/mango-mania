@@ -1,5 +1,6 @@
 import { MongoClient, type Collection } from 'mongodb'
 import { type MangoProduct } from '@/types/mango'
+import { type StoreOrder } from '@/types/order'
 
 const uri = process.env.MONGODB_URI
 const dbName = process.env.MONGODB_DB ?? 'mango-mania'
@@ -71,3 +72,62 @@ export function validateProduct(product: MangoProduct): boolean {
 		Array.isArray(product.relatedIds)
 	)
 }
+
+export async function getOrdersCollection(): Promise<
+	Collection<StoreOrder>
+> {
+	const client = await getMongoClient()
+	return client.db(dbName).collection<StoreOrder>('orders')
+}
+
+/**
+ * Initializes the collection and ensures index performance
+ */
+export async function initOrdersCollection() {
+	const collection = await getOrdersCollection()
+
+	// Ensures that no two orders can have the same custom id string
+	await collection.createIndex({ id: 1 }, { unique: true })
+
+	return collection
+}
+
+/**
+ * Strips out MongoDB's internal BSON _id so it doesn't crash Next.js Client Components
+ */
+export function serializeOrder(
+	order: StoreOrder & { _id?: unknown },
+): StoreOrder {
+	const { _id, ...serializedOrder } = order
+	void _id
+	return serializedOrder as StoreOrder
+}
+
+/**
+ * Acts as your database schema validation guard before saving payloads
+ */
+export function validateOrder(order: StoreOrder): boolean {
+	return (
+		typeof order.id === 'string' &&
+		typeof order.createdAt === 'string' &&
+		typeof order.total === 'number' &&
+		typeof order.itemCount === 'number' &&
+		Array.isArray(order.items) &&
+		order.items.every(item => 
+			typeof item.productId === 'string' &&
+			typeof item.name === 'string' &&
+			typeof item.variety === 'string' &&
+			typeof item.unit === 'string' &&
+			typeof item.price === 'number' &&
+			typeof item.quantity === 'number' &&
+			typeof item.lineTotal === 'number'
+		) &&
+		!!order.customer &&
+		typeof order.customer.name === 'string' &&
+		typeof order.customer.phone === 'string' &&
+		typeof order.customer.address === 'string' &&
+		order.paymentMethod === 'Cash on delivery' &&
+		order.status === 'New'
+	)
+}
+

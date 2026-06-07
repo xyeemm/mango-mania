@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { MangoCard } from "@/components/mango-card";
-import type { MangoProduct } from "@/lib/mangos";
+import type { MangoProduct } from "@/types/mango";
 
 type RelatedProductsProps = {
   products: MangoProduct[];

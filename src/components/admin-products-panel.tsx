@@ -274,7 +274,12 @@ export function AdminProductsPanel() {
 		isLoading: productsLoading,
 		products,
 	} = useManagedProducts()
-	const orders = useOrders()
+	const {
+		orders = [],
+		isLoading: ordersLoading,
+		error: ordersError,
+	} = useOrders()
+
 	const [selectedId, setSelectedId] = useState<string>('new')
 	const [form, setForm] = useState<ProductForm>(emptyForm)
 	const [query, setQuery] = useState('')
@@ -608,9 +613,12 @@ export function AdminProductsPanel() {
 							</p>
 							<p className='mt-1 text-sm text-muted-foreground'>
 								{productsError ??
+									ordersError ??
 									(productsLoading
 										? 'Loading products from MongoDB...'
-										: notice)}
+										: ordersLoading
+											? 'Loading orders from MongoDB...'
+											: notice)}
 							</p>
 						</div>
 
@@ -957,7 +965,7 @@ export function AdminProductsPanel() {
 											<tr key={order.id} className='align-top'>
 												<td className='px-4 py-4'>
 													<p className='font-medium'>{order.id}</p>
-													<p className='mt-1 text-xs text-muted-foreground'>
+													<p className='mt-1 text-xs text-muted-foreground' suppressHydrationWarning>
 														{formatOrderDate(order.createdAt)}
 													</p>
 												</td>
@@ -1038,7 +1046,7 @@ function OrderCard({ order }: { order: StoreOrder }) {
 			<div className='flex items-start justify-between gap-3'>
 				<div>
 					<p className='font-medium'>{order.id}</p>
-					<p className='mt-1 text-xs text-muted-foreground'>
+					<p className='mt-1 text-xs text-muted-foreground' suppressHydrationWarning>
 						{formatOrderDate(order.createdAt)}
 					</p>
 				</div>
@@ -1088,7 +1096,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 	return (
 		<div className='rounded-lg border bg-card p-3'>
 			<p className='text-xs text-muted-foreground'>{label}</p>
-			<p className='mt-1 truncate text-lg font-semibold'>{value}</p>
+			<p className='mt-1 truncate text-lg font-semibold' suppressHydrationWarning>{value}</p>
 		</div>
 	)
 }
