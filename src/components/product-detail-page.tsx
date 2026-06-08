@@ -67,7 +67,7 @@ export function ProductDetailPage({
   function handleAddToCart() {
     if (!product) return;
     cart.addItem(product);
-    toast.success(`${product.name} added to cart`);
+    toast.success(`Rs.${product.name} added to cart`);
   }
 
   if (!product) {
