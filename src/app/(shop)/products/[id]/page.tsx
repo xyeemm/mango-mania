@@ -1,3 +1,5 @@
+
+
 import { ProductDetailPage } from '@/components/product-detail-page'
 import { type MangoProduct } from '@/types/mango'
 import type { Metadata } from 'next'
