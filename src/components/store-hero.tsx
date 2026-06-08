@@ -6,8 +6,6 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Award, Leaf, Sparkles, Truck } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-// 1. Import your shared type definition
-import { type MangoProduct } from '@/types/mango'
 
 const features = [
 	{ icon: Leaf, label: 'Tree-ripened', sub: 'Harvested at peak maturity' },
@@ -22,7 +20,31 @@ const features = [
 const stats = [
 	{ value: '12+', label: 'Partner orchards' },
 	{ value: '6', label: 'Premium varieties' },
-	{ value: '48h', label: 'Farm to doorstep' },
+	{ value: '6h', label: 'Farm to doorstep' },
+]
+
+const heroImages = [
+	{
+		id: 'hero-1',
+		src: 'https://picsum.photos/seed/mango-alphonso/800/1000',
+		alt: 'Alphonso mangos',
+		name: 'Alphonso',
+		price: 850,
+	},
+	{
+		id: 'hero-2',
+		src: 'https://picsum.photos/seed/mango-kesar/800/1000',
+		alt: 'Kesar mangos',
+		name: 'Kesar',
+		price: 750,
+	},
+	{
+		id: 'hero-3',
+		src: 'https://picsum.photos/seed/mango-chaunsa/800/1000',
+		alt: 'Chaunsa mangos',
+		name: 'Chaunsa',
+		price: 600,
+	},
 ]
 
 const fadeUp = {
@@ -49,16 +71,7 @@ const imageFloat = (delay: number) => ({
 	},
 })
 
-// 2. Define component props to accept your real database items
-interface StoreHeroProps {
-	heroImages: MangoProduct[]
-}
-
-export function StoreHero({ heroImages }: StoreHeroProps) {
-	// If the database is loading or empty, provide a safe fallback array so the page doesn't crash
-	const displays =
-		heroImages && heroImages.length > 0 ? heroImages.slice(0, 3) : []
-
+export function StoreHero() {
 	return (
 		<section id='delivery' className='relative overflow-hidden border-b'>
 			{/* Animated background */}
@@ -210,8 +223,7 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 						transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
 						className='relative size-full'
 					>
-						{/* 3. Map over your displays variable instead of the old array */}
-						{displays.map((product, i) => {
+						{heroImages.map((image, i) => {
 							const positions = [
 								'left-0 top-0 z-10 w-[58%]',
 								'right-0 top-[12%] z-20 w-[52%]',
@@ -219,13 +231,13 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 							]
 							return (
 								<motion.div
-									key={product.id}
+									key={image.id}
 									initial={{ opacity: 0, y: 40, rotate: i % 2 === 0 ? -4 : 4 }}
 									animate={{
 										opacity: 1,
 										y: 0,
 										rotate: 0,
-										transition: { 
+										transition: {
 											duration: 0.7,
 											delay: 0.35 + i * 0.12,
 											ease: [0.22, 1, 0.36, 1],
@@ -241,8 +253,8 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 										className='relative aspect-[4/5] w-full bg-muted'
 									>
 										<Image
-											src={product?.images[0]}
-											alt={product?.imageAlt}
+											src={image.src}
+											alt={image.alt}
 											fill
 											sizes='280px'
 											className='object-cover'
@@ -255,26 +267,24 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 										transition={{ delay: 0.8 + i * 0.1 }}
 										className='absolute bottom-3 left-3 rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur-sm'
 									>
-										{product.name}
+										{image.name}
 									</motion.div>
 								</motion.div>
 							)
 						})}
 
-						{displays.length > 0 && (
-							<motion.div
-								animate={{ scale: [1, 1.05, 1] }}
-								transition={{ duration: 3, repeat: Infinity }}
-								className='absolute -right-2 top-1/2 z-40 flex size-20 -translate-y-1/2 flex-col items-center justify-center rounded-full border-4 border-background bg-primary text-center text-primary-foreground shadow-lg'
-							>
-								<span className='text-[10px] font-medium uppercase tracking-wide opacity-90'>
-									From
-								</span>
-								<span className='font-heading text-lg font-semibold leading-none'>
-									${displays[0]?.price}
-								</span>
-							</motion.div>
-						)}
+						<motion.div
+							animate={{ scale: [1, 1.05, 1] }}
+							transition={{ duration: 3, repeat: Infinity }}
+							className='absolute -right-2 top-1/2 z-40 flex size-20 -translate-y-1/2 flex-col items-center justify-center rounded-full border-4 border-background bg-primary text-center text-primary-foreground shadow-lg'
+						>
+							<span className='text-[10px] font-medium uppercase tracking-wide opacity-90'>
+								From
+							</span>
+							<span className='font-heading text-lg font-semibold leading-none'>
+								Rs{heroImages[0].price}
+							</span>
+						</motion.div>
 					</motion.div>
 				</div>
 
@@ -285,15 +295,15 @@ export function StoreHero({ heroImages }: StoreHeroProps) {
 					transition={{ delay: 0.4, duration: 0.6 }}
 					className='relative -mx-4 mt-10 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none lg:hidden'
 				>
-					{displays.map((product, i) => (
+					{heroImages.map((image, i) => (
 						<motion.div
-							key={product.id}
+							key={image.id}
 							animate={imageFloat(i)}
 							className='relative h-44 w-36 shrink-0 overflow-hidden rounded-xl border bg-card shadow-md'
 						>
 							<Image
-								src={product?.images[0]}
-								alt={product?.imageAlt}
+								src={image.src}
+								alt={image.alt}
 								fill
 								sizes='144px'
 								className='object-cover'
