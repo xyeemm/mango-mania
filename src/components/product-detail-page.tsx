@@ -1,204 +1,211 @@
-"use client";
+'use client'
 
-import { motion } from "framer-motion";
-import { Minus, Plus, ShoppingBag } from "lucide-react";
-import Link from "next/link";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ProductGallery } from "@/components/product-gallery";
-import { RelatedProducts } from "@/components/related-products";
-import { useCartContext } from "@/context/cart-context";
-import { useManagedProducts } from "@/hooks/use-managed-products";
+import { ProductGallery } from '@/components/product-gallery'
+import { RelatedProducts } from '@/components/related-products'
+import { Badge } from '@/components/ui/badge'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { useCartContext } from '@/context/cart-context'
+import { useManagedProducts } from '@/hooks/use-managed-products'
+import { motion } from 'framer-motion'
+import { Minus, Plus, ShoppingBag } from 'lucide-react'
+import Link from 'next/link'
+import { toast } from 'sonner'
 // FIXED: Pulling unified data structures from central type module
-import { type MangoProduct } from "@/types/mango";
-import { cn } from "@/lib/utils";
+import { formatPrice } from '@/hooks/currency'
+import { cn } from '@/lib/utils'
+import { type MangoProduct } from '@/types/mango'
 
 // SAFE FALLBACK: Local currency formatter so you don't depend on static lib files
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(price);
-};
+// const formatPrice = (price: number) => {
+//   return new Intl.NumberFormat("en-US", {
+//     style: "currency",
+//     currency: "USD",
+//   }).format(price);
+// };
 
 const tagLabels = {
-  bestseller: "Bestseller",
-  seasonal: "Seasonal",
-  new: "New",
-  "": ""
-} as const;
+	bestseller: 'Bestseller',
+	seasonal: 'Seasonal',
+	new: 'New',
+	'': '',
+} as const
 
 // FIXED: Cleaned up key indexing mapping to support dynamic objects safely
 const detailLabels: Record<string, string> = {
-  origin: "Origin",
-  season: "Season",
-  weight: "Weight",
-  ripeness: "Ripeness",
-  storage: "Storage",
-  delivery: "Delivery",
-};
+	origin: 'Origin',
+	season: 'Season',
+	weight: 'Weight',
+	ripeness: 'Ripeness',
+	storage: 'Storage',
+	delivery: 'Delivery',
+}
 
 type ProductDetailPageProps = {
-  initialProduct?: MangoProduct;
-  productId: string;
-};
+	initialProduct?: MangoProduct
+	productId: string
+}
 
 export function ProductDetailPage({
-  initialProduct,
-  productId,
+	initialProduct,
+	productId,
 }: ProductDetailPageProps) {
-  const { products } = useManagedProducts();
-  const product =
-    products.find((item) => item.id === productId) ?? initialProduct;
-  const cart = useCartContext();
-  const inCart = product
-    ? cart.items.find((i) => i.product.id === product.id)
-    : undefined;
-  const quantity = inCart?.quantity ?? 0;
-  
-  const related = product
-    ? product.relatedIds
-        .map((id) => products.find((item) => item.id === id))
-        .filter((item): item is MangoProduct => item !== undefined)
-    : [];
+	const { products } = useManagedProducts()
+	const product =
+		products.find((item) => item.id === productId) ?? initialProduct
+	const cart = useCartContext()
+	const inCart = product
+		? cart.items.find((i) => i.product.id === product.id)
+		: undefined
+	const quantity = inCart?.quantity ?? 0
 
-  function handleAddToCart() {
-    if (!product) return;
-    cart.addItem(product);
-    toast.success(`${product.name} added to cart`);
-  }
+	const related = product
+		? product.relatedIds
+				.map((id) => products.find((item) => item.id === id))
+				.filter((item): item is MangoProduct => item !== undefined)
+		: []
 
-  if (!product) {
-    return (
-      <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center px-4 py-24 text-center">
-        <p className="font-heading text-2xl font-semibold">Product not found</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          This item may no longer be available.
-        </p>
-        <Link href="/" className={cn(buttonVariants({ size: "lg" }), "mt-8")}>
-          Return to shop
-        </Link>
-      </main>
-    );
-  }
+	function handleAddToCart() {
+		if (!product) return
+		cart.addItem(product)
+		toast.success(`Rs.${product.name} added to cart`)
+	}
 
-  return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
-      <nav className="mb-8 text-sm text-muted-foreground">
-        <Link href="/" className="transition-colors hover:text-foreground">
-          Shop
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-foreground">{product.name}</span>
-      </nav>
+	if (!product) {
+		return (
+			<main className='mx-auto flex max-w-lg flex-1 flex-col items-center justify-center px-4 py-24 text-center'>
+				<p className='font-heading text-2xl font-semibold'>Product not found</p>
+				<p className='mt-2 text-sm text-muted-foreground'>
+					This item may no longer be available.
+				</p>
+				<Link href='/' className={cn(buttonVariants({ size: 'lg' }), 'mt-8')}>
+					Return to shop
+				</Link>
+			</main>
+		)
+	}
 
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-        >
-          <ProductGallery
-            images={product.images}
-            alt={product.imageAlt}
-            emoji={product.emoji}
-          />
-        </motion.div>
+	return (
+		<main className='mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12'>
+			<nav className='mb-8 text-sm text-muted-foreground'>
+				<Link href='/' className='transition-colors hover:text-foreground'>
+					Shop
+				</Link>
+				<span className='mx-2'>/</span>
+				<span className='text-foreground'>{product.name}</span>
+			</nav>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.08 }}
-          className="flex flex-col"
-        >
-          {product.tag && (
-            <Badge className="w-fit bg-brand text-white hover:bg-brand/90">
-              {tagLabels[product.tag] || product.tag}
-            </Badge>
-          )}
+			<div className='grid gap-10 lg:grid-cols-2 lg:gap-14'>
+				<motion.div
+					initial={{ opacity: 0, y: 16 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.45 }}
+				>
+					<ProductGallery
+						images={product.images}
+						alt={product.imageAlt}
+						emoji={product.emoji}
+					/>
+				</motion.div>
 
-          <h1 className="mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-            {product.name}
-          </h1>
-          <p className="mt-1 text-lg text-muted-foreground">{product.variety}</p>
+				<motion.div
+					initial={{ opacity: 0, y: 16 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.45, delay: 0.08 }}
+					className='flex flex-col'
+				>
+					{product.tag && (
+						<Badge className='w-fit bg-brand text-white hover:bg-brand/90'>
+							{tagLabels[product.tag] || product.tag}
+						</Badge>
+					)}
 
-          <p className="mt-5 text-2xl font-semibold tabular-nums">
-            {formatPrice(product.price)}
-            <span className="ml-2 text-base font-normal text-muted-foreground">
-              {product.unit}
-            </span>
-          </p>
+					<h1 className='mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-4xl'>
+						{product.name}
+					</h1>
+					<p className='mt-1 text-lg text-muted-foreground'>
+						{product.variety}
+					</p>
 
-          <p className="mt-6 leading-relaxed text-muted-foreground">
-            {product.longDescription}
-          </p>
+					<p className='mt-5 text-2xl font-semibold tabular-nums'>
+						{formatPrice(product.price)}
+						<span className='ml-2 text-base font-normal text-muted-foreground'>
+							{product.unit}
+						</span>
+					</p>
 
-          <Separator className="my-8" />
+					<p className='mt-6 leading-relaxed text-muted-foreground'>
+						{product.longDescription}
+					</p>
 
-          <h2 className="font-heading text-lg font-semibold">Specifications</h2>
-          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-            {Object.keys(product.details || {}).map((key) => (
-              <div
-                key={key}
-                className="rounded-lg border bg-muted/40 px-4 py-3"
-              >
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {detailLabels[key] || key}
-                </dt>
-                <dd className="mt-1 text-sm font-medium">
-                  {String(product.details[key])}
-                </dd>
-              </div>
-            ))}
-          </dl>
+					<Separator className='my-8' />
 
-          <div className="mt-8">
-            {quantity === 0 ? (
-              <Button size="lg" className="w-full sm:w-auto" onClick={handleAddToCart}>
-                <ShoppingBag className="mr-2 size-4" />
-                Add to cart
-              </Button>
-            ) : (
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-1 rounded-lg border bg-card p-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="size-8"
-                    aria-label="Decrease quantity"
-                    onClick={() =>
-                      cart.updateQuantity(product.id, quantity - 1)
-                    }
-                  >
-                    <Minus className="size-3" />
-                  </Button>
-                  <span className="min-w-10 text-center font-semibold tabular-nums">
-                    {quantity}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="size-8"
-                    aria-label="Increase quantity"
-                    onClick={handleAddToCart}
-                  >
-                    <Plus className="size-3" />
-                  </Button>
-                </div>
-                <span className="text-lg font-semibold tabular-nums">
-                  {formatPrice(product.price * quantity)}
-                </span>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </div>
+					<h2 className='font-heading text-lg font-semibold'>Specifications</h2>
+					<dl className='mt-4 grid gap-3 sm:grid-cols-2'>
+						{Object.keys(product.details || {}).map((key) => (
+							<div
+								key={key}
+								className='rounded-lg border bg-muted/40 px-4 py-3'
+							>
+								<dt className='text-xs font-medium uppercase tracking-wide text-muted-foreground'>
+									{detailLabels[key] || key}
+								</dt>
+								<dd className='mt-1 text-sm font-medium'>
+									{String(product.details[key])}
+								</dd>
+							</div>
+						))}
+					</dl>
 
-      <RelatedProducts products={related} excludeId={product.id} />
-    </main>
-  );
+					<div className='mt-8'>
+						{quantity === 0 ? (
+							<Button
+								size='lg'
+								className='w-full sm:w-auto'
+								onClick={handleAddToCart}
+							>
+								<ShoppingBag className='mr-2 size-4' />
+								Add to cart
+							</Button>
+						) : (
+							<div className='flex flex-wrap items-center gap-4'>
+								<div className='flex items-center gap-1 rounded-lg border bg-card p-1'>
+									<Button
+										type='button'
+										variant='outline'
+										size='icon'
+										className='size-8'
+										aria-label='Decrease quantity'
+										onClick={() =>
+											cart.updateQuantity(product.id, quantity - 1)
+										}
+									>
+										<Minus className='size-3' />
+									</Button>
+									<span className='min-w-10 text-center font-semibold tabular-nums'>
+										{quantity}
+									</span>
+									<Button
+										type='button'
+										variant='outline'
+										size='icon'
+										className='size-8'
+										aria-label='Increase quantity'
+										onClick={handleAddToCart}
+									>
+										<Plus className='size-3' />
+									</Button>
+								</div>
+								<span className='text-lg font-semibold tabular-nums'>
+									{formatPrice(product.price * quantity)}
+								</span>
+							</div>
+						)}
+					</div>
+				</motion.div>
+			</div>
+
+			<RelatedProducts products={related} excludeId={product.id} />
+		</main>
+	)
 }
