@@ -35,7 +35,8 @@ export const metadata: Metadata = {
 		'buy mangos online',
 		'multan mango delivery',
 		'fresh chaunsa mango',
-		'premium mango box',
+		'premium mango shop',
+		'premium mango buy',
 	],
 	openGraph: {
 		title: 'Mango Mania — Premium Farm-Fresh Multani Mangos',
