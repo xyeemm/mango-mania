@@ -28,7 +28,7 @@ export function MangoStore() {
 
     return (
         <>
-            <StoreHero heroImages={products} />
+            <StoreHero  />
 
             <section
                 id='shop'
