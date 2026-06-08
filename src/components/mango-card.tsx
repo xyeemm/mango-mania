@@ -63,19 +63,19 @@ export function MangoCard({ product, index, compact = false }: MangoCardProps) {
     >
       <Card className="flex h-full flex-col overflow-hidden pt-0 shadow-sm hover:scale-[1.03] hover:shadow-lg">
         <Link href={href} className="group block">
-          <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
             <ProductImage
               src={product.images[0]}
               alt={product.imageAlt}
               emoji={product.emoji}
-              className="transition-transform duration-500 group-hover:scale-[1.03]"
+              className="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             />
             {product.tag && (
-              <Badge className="absolute top-3 right-3 bg-brand text-white hover:bg-brand/90">
-                {tagLabels[product.tag]}
+              <Badge className="absolute top-3 right-3 bg-brand text-white hover:bg-brand/90 transition-all duration-300 ease-out">
+              {tagLabels[product.tag]}
               </Badge>
             )}
-          </div>
+            </div>
         </Link>
 
         <CardHeader className={cn("pb-2", compact && "pb-1")}>
