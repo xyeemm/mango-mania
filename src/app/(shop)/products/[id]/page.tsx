@@ -1,5 +1,3 @@
-
-
 import { ProductDetailPage } from '@/components/product-detail-page'
 import { type MangoProduct } from '@/types/mango'
 import type { Metadata } from 'next'
@@ -12,16 +10,16 @@ type PageProps = {
 // HELPER: Base URL utility to handle both local development and live hosting
 // HELPER: Base URL utility to handle local dev, Vercel deployments, and custom live domains
 const getBaseUrl = () => {
-    if (typeof window !== 'undefined') return ''
-    
-    // 1. Check your custom environment variable
-    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
-    
-    // 2. Automatically catch Vercel's native deployment domain URL
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-    
-    // 3. Fallback for your local MacBook development environment
-    return 'http://localhost:3000'
+	if (typeof window !== 'undefined') return ''
+
+	// 1. Check your custom environment variable
+	if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL
+
+	// 2. Automatically catch Vercel's native deployment domain URL
+	if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+
+	// 3. Fallback for your local MacBook development environment
+	return 'http://localhost:3000'
 }
 // HELPER: Dynamic data fetcher that speaks directly to your MongoDB API routes
 async function fetchProductData(id: string): Promise<MangoProduct | null> {
@@ -42,7 +40,6 @@ async function fetchProductData(id: string): Promise<MangoProduct | null> {
 		return null
 	}
 }
-
 
 /**
  * 2. Dynamic Meta Engine
@@ -77,14 +74,43 @@ export async function generateMetadata({
 /**
  * 3. Core Page Shell Component
  */
+// Inside src/app/products/[id]/page.tsx and The Google Trust Injection: Product Schema Markup (JSON-LD)
+
 export default async function ProductPage({ params }: PageProps) {
 	const { id } = await params
 	const product = await fetchProductData(id)
 
-	// If a user types a random URL string that doesn't match an active MongoDB item, show a 404
 	if (!product) {
 		notFound()
 	}
 
-	return <ProductDetailPage initialProduct={product} productId={id} />
+	// Google-readable Schema Markup object
+	const jsonLd = {
+		'@context': 'https://schema.org',
+		'@type': 'Product',
+		name: `${product.name} - Fresh Multani Mangos`,
+		image: product.images,
+		description: product.description,
+		sku: product.id,
+		offers: {
+			'@type': 'Offer',
+			url: `https://your-domain.com/products/${product.id}`,
+			priceCurrency: 'PKR',
+			price: product.price,
+			itemCondition: 'https://schema.org/NewCondition',
+			availability: 'https://schema.org/InStock',
+		},
+	}
+
+	return (
+		<>
+			{/* Inject Structured Data markup straight into the page HTML head for Google bots */}
+			<script
+				type='application/ld+json'
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+			/>
+
+			<ProductDetailPage initialProduct={product} productId={id} />
+		</>
+	)
 }
