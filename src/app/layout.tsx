@@ -74,7 +74,7 @@ export default function RootLayout({
 						{/* 2. Floating WhatsApp Container */}
 						<div className='fixed bottom-6 right-6 z-50'>
 							<WhatsAppButton
-								phoneNumber='923001234567' // Replace with your actual Pakistani WhatsApp number
+								phoneNumber='923060721213' // Replace with your actual Pakistani WhatsApp number
 								message="Salam Mango Mania! I'd like to inquire about ordering fresh Multani mangos."
 							/>
 						</div>
