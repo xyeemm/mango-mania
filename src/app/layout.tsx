@@ -5,6 +5,8 @@ import type { Metadata } from 'next'
 import { DM_Sans, Fraunces, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
+import {WhatsAppButton} from '@/components/whatsAppButton'
+
 const dmSans = DM_Sans({
 	variable: '--font-sans',
 	subsets: ['latin'],
@@ -68,6 +70,14 @@ export default function RootLayout({
 					<AppMotionConfig>
 						{children}
 						<Toaster theme='light' position='top-center' richColors />
+
+						{/* 2. Floating WhatsApp Container */}
+						<div className='fixed bottom-6 right-6 z-50'>
+							<WhatsAppButton
+								phoneNumber='923001234567' // Replace with your actual Pakistani WhatsApp number
+								message="Salam Mango Mania! I'd like to inquire about ordering fresh Multani mangos."
+							/>
+						</div>
 					</AppMotionConfig>
 				</CartProvider>
 			</body>
