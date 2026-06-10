@@ -16,8 +16,7 @@ export function StoreFooter() {
               Mango Mania
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Premium mangos sourced directly from partner orchards. Quality
-              you can taste, delivered with care.
+              From the rich, aromatic Chaunsa to the vibrant Sindhri, we only catalog the absolute top-tier grade of the harvest. If it isn't perfect, it doesn’t leave our farm.
             </p>
           </div>
           <nav className="flex flex-wrap gap-x-8 gap-y-2">

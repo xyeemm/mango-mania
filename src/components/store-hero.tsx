@@ -166,8 +166,11 @@ export function StoreHero() {
 						variants={fadeUp}
 						className='mt-5 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg'
 					>
-						Alphonso, Kesar, and rare seasonal picks — hand-selected, perfectly
-						ripened, and delivered with the care of a specialty grocer.
+						The authentic Multan mango season is short, and our premium batch
+						slots fill up fast. Secure your box today before the harvest wraps
+						up!
+						{/* Alphonso, Kesar, and rare seasonal picks — hand-selected, perfectly
+						ripened, and delivered with the care of a specialty grocer. */}
 					</motion.p>
 
 					<motion.div
