@@ -76,6 +76,7 @@ export default function RootLayout({
 							<WhatsAppButton
 								phoneNumber='923060721213' // Replace with your actual Pakistani WhatsApp number
 								message="Salam Mango Mania! I'd like to inquire about ordering fresh Multani mangos."
+								
 							/>
 						</div>
 					</AppMotionConfig>
