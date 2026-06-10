@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { DM_Sans, Fraunces, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
-import {WhatsAppButton} from '@/components/whatsAppButton'
+import { WhatsAppButton } from '@/components/whatsAppButton'
 
 const dmSans = DM_Sans({
 	variable: '--font-sans',
