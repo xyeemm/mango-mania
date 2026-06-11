@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { getOptimizedCloudinaryUrl } from "@/lib/optimizedCloudinary";
 
 type ProductImageProps = {
   alt: string;
@@ -37,12 +36,11 @@ export function ProductImage({
     );
   }
 
-  const optimizedSrc = getOptimizedCloudinaryUrl(src);
   return (
     // Admin images can come from any host, so this intentionally avoids next/image host restrictions.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={optimizedSrc}
+      src={imageSrc}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding="async"

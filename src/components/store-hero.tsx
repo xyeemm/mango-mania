@@ -329,33 +329,18 @@ export function StoreHero() {
 				className='relative mx-auto grid max-w-6xl gap-4 border-t bg-card/50 px-4 py-8 backdrop-blur-sm sm:grid-cols-3 sm:px-6'
 			>
 				{features.map(({ icon: Icon, label, sub }) => (
-					<motion.li
+					<li
 						key={label}
-						variants={{
-							hidden: { opacity: 0, y: 20 },
-							visible: {
-								opacity: 1,
-								y: 0,
-								transition: {
-									duration: 0.45,
-									ease: [0.22, 1, 0.36, 1] as const,
-								},
-							},
-						}}
-						whileHover={{ y: -4, transition: { duration: 0.2 } }}
 						className='flex items-start gap-3 rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md'
 					>
-						<motion.div
-							whileHover={{ rotate: 8, scale: 1.05 }}
-							className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'
-						>
+						<div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary'>
 							<Icon className='size-5' />
-						</motion.div>
+						</div>
 						<div>
 							<p className='text-sm font-medium'>{label}</p>
 							<p className='mt-0.5 text-xs text-muted-foreground'>{sub}</p>
 						</div>
-					</motion.li>
+					</li>
 				))}
 			</motion.ul>
 		</section>
