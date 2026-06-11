@@ -11,18 +11,10 @@ import { motion } from 'framer-motion'
 import { Minus, Plus, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-// FIXED: Pulling unified data structures from central type module
 import { formatPrice } from '@/hooks/currency'
 import { cn } from '@/lib/utils'
 import { type MangoProduct } from '@/types/mango'
 
-// SAFE FALLBACK: Local currency formatter so you don't depend on static lib files
-// const formatPrice = (price: number) => {
-//   return new Intl.NumberFormat("en-US", {
-//     style: "currency",
-//     currency: "USD",
-//   }).format(price);
-// };
 
 const tagLabels = {
 	bestseller: 'Bestseller',
