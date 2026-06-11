@@ -14,9 +14,7 @@ function isCartItem(value: unknown): value is CartItem {
   if (!value || typeof value !== "object") {
     return false;
   }
-
   const item = value as Partial<CartItem>;
-
   return (
     typeof item.quantity === "number" &&
     item.quantity > 0 &&
@@ -31,16 +29,12 @@ function readSavedCart(): CartItem[] {
   if (typeof window === "undefined") {
     return [];
   }
-
   const savedCart = window.localStorage.getItem(CART_STORAGE_KEY);
-
   if (!savedCart) {
     return [];
   }
-
   try {
     const parsedCart = JSON.parse(savedCart) as unknown;
-
     return Array.isArray(parsedCart) ? parsedCart.filter(isCartItem) : [];
   } catch {
     return [];
@@ -48,11 +42,25 @@ function readSavedCart(): CartItem[] {
 }
 
 export function useCart() {
-  const [items, setItems] = useState<CartItem[]>(readSavedCart);
+  // 1. Always start with an empty array so Server and Client match initially
+  const [items, setItems] = useState<CartItem[]>([]);
+  
+  // Track whether the cart has synchronized with localStorage yet
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // 2. Load the saved cart ONLY once the client browser is ready
   useEffect(() => {
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+    const saved = readSavedCart();
+    setItems(saved);
+    setIsInitialized(true);
+  }, []);
+
+  // 3. Save to localStorage when items change, but only AFTER initialization
+  useEffect(() => {
+    if (isInitialized) {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    }
+  }, [items, isInitialized]);
 
   const addItem = useCallback((product: MangoProduct) => {
     setItems((prev) => {
@@ -105,6 +113,7 @@ export function useCart() {
     clearCart,
     total,
     itemCount,
+    isInitialized, // Exported in case your UI components want to check loading states
   };
 }
 
