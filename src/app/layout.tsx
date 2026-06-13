@@ -75,15 +75,16 @@ export default function RootLayout({
 						<div className='fixed bottom-6 right-6 z-50'>
 							<WhatsAppButton
 								phoneNumber='923060721213'
-								message='To ensure complete satisfaction, we will send you live pictures of your specific mango batch for approval before it is packed and dispatched!
+								message={`Salam Mango Mania! 
 
-📦 Current Seasonal Rate List (per 10 KG)
+To ensure complete satisfaction, please send me live pictures of my specific mango batch for approval before it is packed and dispatched!
 
-• Premium Chaunsa (White / Anwar Ratol): Rs. 2,800  
-• Sindhri (Selected Premium): Rs. 2,200  
-• Dusehri / Langra: Rs. 1,800  
+📦 Current Seasonal Rate List (per 10 KG):
+• Premium Chaunsa: Rs. 2,800
+• Sindhri Premium: Rs. 2,200
+• Dusehri / Langra: Rs. 1,800
 
-Inquire about ordering fresh Multani mangos.'
+I'd like to reconfirm about current pricing before placing an order.`}
 							/>
 						</div>
 					</AppMotionConfig>
