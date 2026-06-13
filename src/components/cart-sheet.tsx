@@ -174,7 +174,7 @@ export function CartSheet({ open, onOpenChange, cart }: CartSheetProps) {
 								/>
 							</div>
 							<p className='rounded-lg border bg-muted/50 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground'>
-								Orders are processed instantly.
+								Taste the Real Summer – Order Now{' '}
 							</p>
 							<SheetFooter className='mt-auto flex-col gap-2 p-0 sm:flex-col'>
 								<Button

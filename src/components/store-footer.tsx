@@ -14,7 +14,7 @@ export function StoreFooter() {
                     {/* Brand & Contact Info */}
                     <div className='max-w-sm'>
                         <p className='font-heading text-lg font-semibold tracking-tight'>
-                            Mango Mania
+                            Multan Mango
                         </p>
                         <p className='mt-2 text-sm leading-relaxed text-muted-foreground'>
                             From the rich, aromatic Chaunsa to the vibrant Sindhri, we only

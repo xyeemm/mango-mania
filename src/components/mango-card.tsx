@@ -58,7 +58,7 @@ export function MangoCard({ product, index, compact = false }: MangoCardProps) {
           },
         },
       }}
-      // whileHover={{ y: -8, transition: { duration: 0.5 } }}
+
       className="h-full"
     >
       <Card className="flex h-full flex-col overflow-hidden pt-0 shadow-sm hover:scale-[1.03] hover:shadow-lg">

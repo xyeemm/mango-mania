@@ -21,7 +21,7 @@ export function StoreHeader({ onCartOpen }: StoreHeaderProps) {
 					</span>
 					<div>
 						<p className='font-heading text-base font-semibold leading-none tracking-tight'>
-							Mango Mania
+							Multan Mango
 						</p>
 						<p className='text-[11px] text-muted-foreground'>Premium produce</p>
 					</div>
