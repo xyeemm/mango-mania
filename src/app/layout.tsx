@@ -74,9 +74,15 @@ export default function RootLayout({
 						{/* 2. Floating WhatsApp Container */}
 						<div className='fixed bottom-6 right-6 z-50'>
 							<WhatsAppButton
-								phoneNumber='923060721213' // Replace with your actual Pakistani WhatsApp number
-								message="Salam Mango Mania! I'd like to inquire about ordering fresh Multani mangos."
-								
+								phoneNumber='923060721213'
+								message='To ensure complete satisfaction, we will send you live pictures of your specific mango batch for approval before it is packed and dispatched!
+
+📊 Current Seasonal Rate List (per 10-Kg Box)
+• Premium Chaunsa (White / Anwar Ratol): Rs. 2,800
+• Sindhri (Selected Premium): Rs. 2,200
+• Dusehri / Langra: Rs. 1,800
+
+Inquire about ordering fresh Multani mangos.'
 							/>
 						</div>
 					</AppMotionConfig>
