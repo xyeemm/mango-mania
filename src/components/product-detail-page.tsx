@@ -126,9 +126,10 @@ export function ProductDetailPage({
 						</span>
 					</p>
 
-					<p className='mt-6 leading-relaxed text-muted-foreground'>
-						{product.longDescription}
-					</p>
+					{/* FIXED: Added whitespace-pre-line here to preserve admin textarea layout formatting */}
+                    <p className='mt-6 leading-relaxed text-muted-foreground whitespace-pre-line'>
+                        {product.longDescription}
+                    </p>
 
 					<Separator className='my-8' />
 
