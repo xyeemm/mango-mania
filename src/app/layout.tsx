@@ -25,7 +25,7 @@ const geistMono = Geist_Mono({
 // OPTIMIZED SEO METADATA BLOCK
 export const metadata: Metadata = {
 	title: {
-		default: 'Mango Mania — Buy Fresh Multani Mangos Online',
+		default: 'Multan Mango — Buy Fresh Multani Mangos Online',
 		template: '%s | Mango Mania',
 	},
 	description:
