@@ -25,7 +25,7 @@ const geistMono = Geist_Mono({
 // OPTIMIZED SEO METADATA BLOCK
 export const metadata: Metadata = {
 	title: {
-		default: 'Mango Mania — Buy Fresh Multani Mangos Online',
+		default: 'Multan Mango — Buy Fresh Multani Mangos Online',
 		template: '%s | Mango Mania',
 	},
 	description:
@@ -74,9 +74,17 @@ export default function RootLayout({
 						{/* 2. Floating WhatsApp Container */}
 						<div className='fixed bottom-6 right-6 z-50'>
 							<WhatsAppButton
-								phoneNumber='923060721213' // Replace with your actual Pakistani WhatsApp number
-								message="Salam Mango Mania! I'd like to inquire about ordering fresh Multani mangos."
-								
+								phoneNumber='923060721213'
+								message={`Salam Mango Mania! 
+
+To ensure complete satisfaction, please send me live pictures of my specific mango batch for approval before it is packed and dispatched!
+
+📦 Current Seasonal Rate List (per 10 KG):
+• Premium Chaunsa: Rs. 2,800
+• Sindhri Premium: Rs. 2,200
+• Dusehri / Langra: Rs. 1,800
+
+I'd like to reconfirm about current pricing before placing an order.`}
 							/>
 						</div>
 					</AppMotionConfig>
