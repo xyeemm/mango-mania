@@ -16,12 +16,14 @@ export function StoreHeader({ onCartOpen }: StoreHeaderProps) {
 		<header className='sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80'>
 			<div className='mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-4 sm:px-6'>
 				<Link href='/' className='flex items-center gap-3'>
-					<span className='flex size-9 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground'>
-						MM
-					</span>
+          <img
+            src='/logo.png'
+            alt='Multan Mango Logo'
+            className='size-9 rounded-md object-cover'
+          />
 					<div>
 						<p className='font-heading text-base font-semibold leading-none tracking-tight'>
-							Mango Mania
+							Multan Mango
 						</p>
 						<p className='text-[11px] text-muted-foreground'>Premium produce</p>
 					</div>
