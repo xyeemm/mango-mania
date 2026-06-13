@@ -1,40 +1,32 @@
-export function getOptimizedCloudinaryUrl(
-  url: string | undefined, 
-  width = 600
-): string {
-  if (!url?.trim() || !url.includes("res.cloudinary.com")) {
-    return url || "";
+/**
+ * Transforms a standard Cloudinary delivery URL into a highly optimized, 
+ * modern-format image URL on the fly.
+ */
+export function getOptimizedImageUrl(url: string, width = 600): string {
+  if (!url) return "";
+
+  // If it's not a Cloudinary URL, return it as-is to avoid breaking the app
+  if (!url.includes("res.cloudinary.com")) {
+    return url;
   }
 
-  const cleanUrl = url.trim();
+  // Cloudinary URLs look like: https://res.cloudinary.com/demo/image/upload/v123456/sample.jpg
+  // We want to insert transformations right after '/upload/'
+  const target = "/upload/";
+  const index = url.indexOf(target);
 
-  // If it's already optimized by our app, don't touch it
-  if (cleanUrl.includes("q_auto") || cleanUrl.includes("f_auto")) {
-    return cleanUrl;
-  }
+  if (index === -1) return url;
 
-  // Find where the asset path starts (right after /upload, /private, /authenticated, etc.)
-  const deliveryTypes = ["/upload/", "/private/", "/authenticated/", "/fetch/"];
-  let targetType = "";
-  let splitIndex = -1;
+  const insertionPoint = index + target.length;
+  
+  /**
+   * Transformation Parameters Breakdown:
+   * f_auto: Automatically converts to the best modern format (AVIF, WebP, etc.) for the browser
+   * q_auto: Automatically applies the best compression-to-quality ratio
+   * w_: Resizes the image width to prevent serving massive dimensions to small mobile screens
+   * c_scale: Scales the image cleanly to the specified width
+   */
+  const transformations = `f_auto,q_auto,w_${width},c_scale/`;
 
-  for (const type of deliveryTypes) {
-    splitIndex = cleanUrl.indexOf(type);
-    if (splitIndex !== -1) {
-      targetType = type;
-      break;
-    }
-  }
-
-  // If the URL layout doesn't match standard Cloudinary structures, fallback safely
-  if (splitIndex === -1) {
-    return cleanUrl;
-  }
-
-  // Break it down into two clean halves
-  const hostPart = cleanUrl.substring(0, splitIndex + targetType.length);
-  const pathPart = cleanUrl.substring(splitIndex + targetType.length);
-
-  // Inject our optimized parameters directly into the middle juncture
-  return `${hostPart}f_auto,q_auto,w_${width}/${pathPart}`;
+  return url.slice(0, insertionPoint) + transformations + url.slice(insertionPoint);
 }

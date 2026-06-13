@@ -26,7 +26,7 @@ const stats = [
 const heroImages = [
 	{
 		id: 'hero-1',
-		src: 'https://picsum.photos/seed/mango-alphonso/800/1000',
+		src: 'https://res.cloudinary.com/dsxmnkxxl/image/upload/v1781376896/mango-mania/products/qdpcmhx2ctgtt6bv6p2i.jpg',
 		alt: 'Alphonso mangos',
 		name: 'Alphonso',
 		price: 850,
