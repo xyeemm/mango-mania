@@ -60,7 +60,7 @@ export function StoreFooter() {
                 {/* Bottom Bar */}
                 <div className='mt-10 flex flex-col gap-2 border-t pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between'>
                     <p suppressHydrationWarning>
-                        © {new Date().getFullYear()} Mango Mania. All rights reserved.
+                        © {new Date().getFullYear()} Multan Mango. All rights reserved.
                     </p>
                     <p>Fast Local delivery · Store to Your Door</p>
                 </div>
