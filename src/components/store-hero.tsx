@@ -33,14 +33,14 @@ const heroImages = [
 	},
 	{
 		id: 'hero-2',
-		src: 'https://picsum.photos/seed/mango-kesar/800/1000',
+		src: 'https://res.cloudinary.com/dsxmnkxxl/image/upload/v1780691950/mango-mania/products/zibdd1yy2upkyste3ry5.jpg',
 		alt: 'Kesar mangos',
 		name: 'Kesar',
 		price: 750,
 	},
 	{
 		id: 'hero-3',
-		src: 'https://picsum.photos/seed/mango-chaunsa/800/1000',
+		src: 'https://res.cloudinary.com/dsxmnkxxl/image/upload/v1781771974/heroImage_heohnf.jpg',
 		alt: 'Chaunsa mangos',
 		name: 'Chaunsa',
 		price: 600,
@@ -264,14 +264,14 @@ export function StoreHero() {
 											priority={i === 0}
 										/>
 									</motion.div>
-									<motion.div
+									{/* <motion.div
 										initial={{ opacity: 0, x: -8 }}
 										animate={{ opacity: 1, x: 0 }}
 										transition={{ delay: 0.8 + i * 0.1 }}
 										className='absolute bottom-3 left-3 rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur-sm'
 									>
 										{image.name}
-									</motion.div>
+									</motion.div> */}
 								</motion.div>
 							)
 						})}
