@@ -256,6 +256,7 @@ export function StoreHero() {
 										className='relative aspect-[4/5] w-full bg-muted'
 									>
 										<Image
+											loading='eager'
 											src={image.src}
 											alt={image.alt}
 											fill
