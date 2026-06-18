@@ -219,7 +219,7 @@ export function StoreHero() {
 				</div>
 
 				{/* Image collage */}
-				<div className='relative mx-auto mt-12 hidden aspect-[4/5] w-full max-w-md lg:mt-0 lg:block'>
+				<div className='relative mx-auto mt-12 hidden aspect-4/5 w-full max-w-md lg:mt-0 lg:block'>
 					<motion.div
 						initial={{ opacity: 0, scale: 0.92 }}
 						animate={{ opacity: 1, scale: 1 }}
@@ -248,7 +248,7 @@ export function StoreHero() {
 									}}
 									// Added aspect-[4/5] explicitly to the animated wrapper container
 									className={cn(
-										'absolute aspect-[4/5] overflow-hidden rounded-2xl border-4 border-background shadow-xl bg-muted',
+										'absolute aspect-4/5 overflow-hidden rounded-2xl border-4 border-background shadow-xl bg-muted',
 										positions[i],
 									)}
 								>
@@ -260,7 +260,6 @@ export function StoreHero() {
 											src={image.src}
 											alt={image.alt}
 											fill
-											// unoptimized
 											sizes='(max-width: 1024px) 100vw, 300px'
 											className='object-cover'
 										/>
@@ -287,7 +286,7 @@ export function StoreHero() {
 				{/* Mobile image strip */}
 				<motion.div
 					initial={{ opacity: 0, x: -20 }}
-					animate={{ opacity: 1, x: 0 }}
+					// animate={{ opacity: 1, x: 0 }}
 					transition={{ delay: 0.4, duration: 0.6 }}
 					className='relative -mx-4 mt-10 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none lg:hidden'
 				>
