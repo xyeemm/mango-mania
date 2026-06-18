@@ -61,14 +61,14 @@ const fadeUp = {
 }
 
 const imageFloat = (delay: number) => ({
-	y: [0, -14, 0],
-	rotate: [0, delay % 2 === 0 ? 2 : -2, 0],
+	y: [0, -10, 0], // reduced from -14 (less travel = smoother)
 	transition: {
-		duration: 5 + delay,
+		duration: 6 + delay, // slower = fewer repaints
 		repeat: Infinity,
 		ease: 'easeInOut' as const,
-		delay: delay * 0.4,
+		delay: delay * 0.5,
 	},
+	// removed rotate — rotation forces subpixel antialiasing on mobile, very expensive
 })
 
 export function StoreHero() {
