@@ -219,6 +219,7 @@ export function StoreHero() {
 				</div>
 
 				{/* Image collage */}
+				{/* Image collage */}
 				<div className='relative mx-auto mt-12 hidden aspect-[4/5] w-full max-w-md lg:mt-0 lg:block'>
 					<motion.div
 						initial={{ opacity: 0, scale: 0.92 }}
@@ -246,33 +247,27 @@ export function StoreHero() {
 											ease: [0.22, 1, 0.36, 1],
 										},
 									}}
+									// Added aspect-[4/5] explicitly to the animated wrapper container
 									className={cn(
-										'absolute overflow-hidden rounded-2xl border-4 border-background shadow-xl',
+										'absolute aspect-[4/5] overflow-hidden rounded-2xl border-4 border-background shadow-xl bg-muted',
 										positions[i],
 									)}
 								>
 									<motion.div
 										animate={imageFloat(i)}
-										className='relative aspect-[4/5] w-full bg-muted'
+										className='relative h-full w-full'
 									>
 										<Image
-											loading='eager'
 											src={image.src}
 											alt={image.alt}
 											fill
-											sizes='280px'
+											sizes='(max-width: 1024px) 100vw, 300px'
 											className='object-cover'
-											priority={i === 0}
+											// Crucial: Set priority to true for ALL desktop hero background assets
+											// to force browser pre-parsing during framer animation steps.
+											priority={true}
 										/>
 									</motion.div>
-									{/* <motion.div
-										initial={{ opacity: 0, x: -8 }}
-										animate={{ opacity: 1, x: 0 }}
-										transition={{ delay: 0.8 + i * 0.1 }}
-										className='absolute bottom-3 left-3 rounded-md bg-background/90 px-2.5 py-1 text-xs font-medium shadow-sm backdrop-blur-sm'
-									>
-										{image.name}
-									</motion.div> */}
 								</motion.div>
 							)
 						})}
