@@ -219,7 +219,6 @@ export function StoreHero() {
 				</div>
 
 				{/* Image collage */}
-				{/* Image collage */}
 				<div className='relative mx-auto mt-12 hidden aspect-[4/5] w-full max-w-md lg:mt-0 lg:block'>
 					<motion.div
 						initial={{ opacity: 0, scale: 0.92 }}
@@ -263,9 +262,6 @@ export function StoreHero() {
 											fill
 											sizes='(max-width: 1024px) 100vw, 300px'
 											className='object-cover'
-											// Crucial: Set priority to true for ALL desktop hero background assets
-											// to force browser pre-parsing during framer animation steps.
-											priority={true}
 										/>
 									</motion.div>
 								</motion.div>
