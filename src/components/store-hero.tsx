@@ -316,6 +316,9 @@ export function StoreHero() {
 								sizes='144px'
 								className='object-cover'
 								priority={i < 2}
+								onError={(e) =>
+									console.error(`Image failed to load: ${image.src}`, e)
+								}
 							/>
 						</motion.div>
 					))}
