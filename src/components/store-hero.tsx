@@ -260,7 +260,7 @@ export function StoreHero() {
 											src={image.src}
 											alt={image.alt}
 											fill
-											unoptimized
+											// unoptimized
 											sizes='(max-width: 1024px) 100vw, 300px'
 											className='object-cover'
 										/>
