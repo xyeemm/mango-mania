@@ -33,7 +33,7 @@ const heroImages = [
 	},
 	{
 		id: 'hero-2',
-		src: 'https://res.cloudinary.com/dsxmnkxxl/image/upload/v1781812347/mango-mania/products/byvroezcqdc6t7wpqr7z.jpg',
+		src: 'https://res.cloudinary.com/dsxmnkxxl/image/upload/v1781813000/compressed_aastik-maurya-mneXCvvfK3M-unsplash_usdhkz.webp',
 		alt: 'Kesar mangos',
 		name: 'Kesar',
 		price: 750,
