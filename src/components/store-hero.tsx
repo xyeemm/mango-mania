@@ -61,14 +61,14 @@ const fadeUp = {
 }
 
 const imageFloat = (delay: number) => ({
-	y: [0, -14, 0],
-	rotate: [0, delay % 2 === 0 ? 2 : -2, 0],
+	y: [0, -10, 0], // reduced from -14 (less travel = smoother)
 	transition: {
-		duration: 5 + delay,
+		duration: 6 + delay, // slower = fewer repaints
 		repeat: Infinity,
 		ease: 'easeInOut' as const,
-		delay: delay * 0.4,
+		delay: delay * 0.5,
 	},
+	// removed rotate — rotation forces subpixel antialiasing on mobile, very expensive
 })
 
 export function StoreHero() {
@@ -285,15 +285,28 @@ export function StoreHero() {
 
 				{/* Mobile image strip */}
 				<motion.div
-					initial={{ opacity: 0, x: -20 }}
-					// animate={{ opacity: 1, x: 0 }}
-					transition={{ delay: 0.4, duration: 0.6 }}
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ delay: 0.4, duration: 0.5 }}
 					className='relative -mx-4 mt-10 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none lg:hidden'
 				>
 					{heroImages.map((image, i) => (
 						<motion.div
 							key={image.id}
-							animate={imageFloat(i)}
+							// 3. NO imageFloat on mobile — static cards, no infinite loop
+							style={{
+								willChange: 'transform, opacity',
+								transform: 'translateZ(0)',
+								backfaceVisibility: 'hidden',
+								WebkitBackfaceVisibility: 'hidden' as any,
+							}}
+							initial={{ opacity: 0, y: 16 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{
+								delay: 0.45 + i * 0.08,
+								duration: 0.4,
+								ease: [0.25, 0.46, 0.45, 0.94],
+							}}
 							className='relative h-44 w-36 shrink-0 overflow-hidden rounded-xl border bg-card shadow-md'
 						>
 							<Image
@@ -302,7 +315,7 @@ export function StoreHero() {
 								fill
 								sizes='144px'
 								className='object-cover'
-								priority={i === 0}
+								priority={i < 2}
 							/>
 						</motion.div>
 					))}
