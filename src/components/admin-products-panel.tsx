@@ -26,6 +26,7 @@ import {
 	X,
 } from 'lucide-react'
 import Link from 'next/link'
+import { UserButton } from '@clerk/nextjs'
 import type {
 	ChangeEvent,
 	FormEvent,
@@ -504,7 +505,8 @@ export function AdminProductsPanel() {
 						</div>
 					</div>
 
-					<div className='flex flex-wrap items-center gap-2'>
+					<div className='flex flex-wrap items-center gap-3'>
+						<UserButton />
 						<Link href='/' className={buttonVariants({ variant: 'outline' })}>
 							Storefront
 						</Link>
